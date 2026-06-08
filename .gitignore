@@ -1,0 +1,17 @@
+# Home Assistant private/state files
+secrets.yaml
+*.db
+*.db-*
+home-assistant.log*
+.storage/
+.cloud/
+.cache/
+tts/
+backups/
+known_devices.yaml
+
+# Local/private exports
+_private/
+raw/
+*.secret.*
+.env

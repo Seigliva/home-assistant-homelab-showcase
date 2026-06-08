@@ -1,0 +1,14 @@
+name: sanitize-check
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  sanitize-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run public safety scanner
+        run: python3 tools/sanitize_check.py .

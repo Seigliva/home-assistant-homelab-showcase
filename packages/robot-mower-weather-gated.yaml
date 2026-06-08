@@ -1,0 +1,63 @@
+input_boolean:
+  robot_mower_clara_active_run:
+    name: Robot Mower CLARA active run
+    icon: mdi:robot-mower
+
+automation:
+  - id: clara_robot_mower_start_every_second_day_if_dry
+    alias: Robot Mower - start every second day if dry
+    description: "CLARA-managed native HA automation. Starts at 09:00 every second day from 2026-05-27 when weather.home is not rain/snow-rain."
+    mode: single
+    triggers:
+      - trigger: time
+        at: "09:00:00"
+    conditions:
+      - condition: template
+        value_template: >-
+          {{ now().date() >= as_datetime('2026-05-27').date()
+             and ((now().date() - as_datetime('2026-05-27').date()).days % 2 == 0) }}
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: weather.home
+            state:
+              - rainy
+              - pouring
+              - lightning-rainy
+              - snowy-rainy
+    actions:
+      - action: lawn_mower.start_mowing
+        target:
+          entity_id: lawn_mower.robot_mower
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.robot_mower_active_run
+      - action: notify.family
+        data:
+          title: Robot Mower startet
+          message: "Gressklipperen startet automatisk. Vær: {{ states('weather.home') }}."
+
+  - id: clara_robot_mower_finished_notification
+    alias: Robot Mower - finished notification
+    description: "CLARA-managed native HA automation. Notifies when the automation-started mowing run returns to dock."
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: lawn_mower.robot_mower
+        from:
+          - mowing
+          - returning
+          - paused
+        to: docked
+    conditions:
+      - condition: state
+        entity_id: input_boolean.robot_mower_active_run
+        state: "on"
+    actions:
+      - action: notify.family
+        data:
+          title: Robot Mower ferdig
+          message: "Gressklipperen er ferdig og er tilbake i dokken."
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.robot_mower_active_run
