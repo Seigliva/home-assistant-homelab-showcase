@@ -5,6 +5,8 @@
 - [Robot mower: every second day if dry](home-assistant/robot-mower-weather-gated.md)
 - [Smart blinds: temperature, wind and MQTT tilt control](home-assistant/smart-blinds-temperature-wind-mqtt.md)
 - [AI laundry finished notification](home-assistant/ai-laundry-finished-notification.md)
+- [Dishwasher finished helper](home-assistant/dishwasher-finished-helper.md)
+- [Water leak critical alert](home-assistant/water-leak-critical-alert.md)
 - [Trash-day reminder with short AI text](home-assistant/trash-day-ai-reminder.md)
 - [Air-quality feedback using lights](home-assistant/air-quality-light-feedback.md)
 - [Car heater scheduling](home-assistant/car-heater-scheduling.md)

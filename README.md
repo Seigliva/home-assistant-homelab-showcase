@@ -1,8 +1,8 @@
-# Home Assistant + Homelab Showcase
+# ITih — IT i hjemmet
 
-A curated, privacy-safe collection of practical Home Assistant and homelab automations from a Norwegian self-hosted setup.
+ITih means **IT i hjemmet** — Norwegian for "IT in the home". It also sounds a little like E.T. phoning home, which fits the vibe: nerdy, practical smart-home and homelab automations that make a house feel alive.
 
-This is not a raw backup of my Home Assistant config. It is a cleaned-up showcase of ideas, patterns and reusable examples that may help other smart-home and homelab nerds build better automations.
+This is not a raw backup of my Home Assistant config. It is a cleaned-up showcase of ideas, patterns and reusable examples that may help other smart-home and homelab nerds build better automations — with a little show-off energy.
 
 ## Highlights
 
@@ -10,7 +10,7 @@ This is not a raw backup of my Home Assistant config. It is a cleaned-up showcas
 - AI-assisted notifications and morning routines
 - Actionable Telegram/mobile notifications
 - Smart blinds driven by temperature, wind and MQTT tilt control
-- Laundry, dishwasher and trash-day reminders
+- Laundry, dishwasher, water-leak and trash-day reminders
 - Air-quality light feedback
 - Unraid Docker watchdog pattern
 - CLARA/Hermes Agent research and operations briefings
@@ -50,4 +50,4 @@ See [SECURITY.md](SECURITY.md).
 
 If this repo gave you ideas or saved you time, feel free to support the project:
 
-[Buy me a coffee](buymeacoffee.com/itih_nor)
+[Buy me a coffee](https://buymeacoffee.com/itih_nor)

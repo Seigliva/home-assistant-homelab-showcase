@@ -2,7 +2,9 @@
 
 ## v1
 
-- curated README and architecture docs
+- ITih naming/brand note
+
+- curated README, brand note and architecture docs
 - robot mower weather-gated example
 - smart blinds examples
 - laundry/trash/air-quality notification patterns
