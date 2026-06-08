@@ -50,6 +50,4 @@ See [SECURITY.md](SECURITY.md).
 
 If this repo gave you ideas or saved you time, feel free to support the project:
 
-[Buy me a coffee](https://buymeacoffee.com/YOUR_HANDLE)
-
-Replace `YOUR_HANDLE` with the real BuyMeACoffee handle when ready.
+[Buy me a coffee](buymeacoffee.com/itih_nor)
