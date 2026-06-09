@@ -2,6 +2,10 @@
 
 ![Anonymized Home Assistant mobile dashboard](../assets/dashboards/mobile-main-dashboard-anonymized.jpg)
 
+Info view example:
+
+![Anonymized Home Assistant info view](../assets/dashboards/mobile-main-dashboard-info-view-anonymized.jpg)
+
 ## Goal
 
 A mobile-first Home Assistant dashboard used as the shared daily control surface for the household. The design prioritizes quick status checks, room navigation and frequently used actions over dense raw entity lists.
@@ -132,6 +136,7 @@ cards:
 The main dashboard behaves like a small household control app rather than a set of unrelated Home Assistant views:
 
 - **Four primary views:** house, calendar, shopping and info.
+- **Info view as household briefing:** the info page reuses the same header/status frame while the center content shows practical reference data such as waste collection, garage shortcut, external links and calendar/countdown chips.
 - **Stable frame:** weather, status line and the four primary icons remain visible across those views.
 - **Changing center:** only the middle content area changes when switching between the primary views.
 - **Fixed bottom dock:** secondary actions stay pinned to the bottom of the screen for quick access from anywhere.
@@ -186,6 +191,21 @@ card:
         action: navigate
         navigation_path: "#settings"
 ```
+
+## Info view pattern
+
+The info view shows why the four-view model works: the global header and navigation stay fixed, while the center changes into a household briefing page.
+
+Good examples from this view:
+
+- waste collection dates with days remaining
+- garage-control shortcut
+- calendar/countdown chip
+- external web shortcut chips
+- unchanged weather/status header
+- unchanged bottom dock
+
+This makes the dashboard useful beyond device control: it becomes a shared household information surface.
 
 ## Why this works well
 
