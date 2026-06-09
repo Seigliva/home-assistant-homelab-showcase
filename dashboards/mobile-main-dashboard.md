@@ -25,6 +25,8 @@ A mobile-first Home Assistant dashboard used as the shared daily control surface
 - Room tiles for living room, kitchen, bedroom, hallway/bath, basement, outside and two child/game rooms.
 - Bottom navigation dock for common operational modes.
 
+Related room drill-down: [Living-room dashboard](living-room-dashboard.md).
+
 ## Heat pump control pattern
 
 The living-room dashboard includes heat pump controls backed by **Broadlink IR**.

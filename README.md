@@ -12,7 +12,7 @@ This is not a raw backup of my Home Assistant config. It is a cleaned-up showcas
 - Smart blinds driven by temperature, wind and MQTT tilt control
 - Laundry, dishwasher, water-leak and trash-day reminders
 - Air-quality light feedback
-- Mobile-first Home Assistant dashboard patterns
+- Mobile-first Home Assistant dashboard patterns with anonymized screenshots/video
 - Unraid Docker watchdog pattern
 - CLARA/Hermes Agent research and operations briefings
 
