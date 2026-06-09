@@ -1,12 +1,8 @@
 # Living-room dashboard: lights, blinds and IR heat pump
 
-<video src="../assets/dashboards/living-room-dashboard-anonymized.mp4" controls muted playsinline poster="../assets/dashboards/living-room-dashboard-still.jpg" width="360">
-  Your browser can also open the anonymized dashboard walkthrough directly from `assets/dashboards/living-room-dashboard-anonymized.mp4`.
-</video>
+![Anonymized living-room dashboard walkthrough](../assets/dashboards/living-room-dashboard-anonymized.gif)
 
-Fallback still image:
-
-![Living-room dashboard still](../assets/dashboards/living-room-dashboard-still.jpg)
+Video fallback: [download/open the anonymized MP4](../assets/dashboards/living-room-dashboard-anonymized.mp4).
 
 ## Goal
 
