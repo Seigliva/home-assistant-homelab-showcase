@@ -11,7 +11,9 @@ A mobile-first Home Assistant dashboard used as the shared daily control surface
 - **Mobile-first layout:** large touch targets and stacked rows that work well one-handed.
 - **Frosted glass visual style:** dark background with translucent cards, soft shadows and blurred panels.
 - **Mushroom + Bubble Card mix:** Mushroom-style entities for compact state display combined with Bubble Card navigation/action rows.
-- **Top status strip:** weather, door/garage state and high-level home status are visible before scrolling.
+- **Top app header:** a compact grid header combines a menu/kiosk toggle with the current weather state and temperature.
+- **Horizontal status rail:** door, garage, open contact sensors and active appliance states appear as pill buttons directly under the header.
+- **Conditional status chips:** low-priority items stay hidden until they matter, e.g. open doors, running appliances, finished cycles or active robot vacuum.
 - **Household presence row:** person cards show anonymized presence/home state. Public screenshot redacts faces and names.
 - **Room cards:** each room card shows the most important temperature/status signal and acts as a drill-down entry point.
 - **Persistent app shell:** weather, status strip and the four primary view icons stay in place while only the center content changes.
@@ -20,14 +22,110 @@ A mobile-first Home Assistant dashboard used as the shared daily control surface
 
 ## Visible sections
 
-- Weather card with current outdoor temperature and condition.
-- Door/garage status indicators with color-coded state.
+- Menu/kiosk button on the left and weather summary on the right.
+- Weather chip showing localized condition text, icon and current temperature.
+- Horizontally scrollable status rail with door/garage state, open contact sensors, appliance state, robot vacuum and light count.
 - Main navigation cards: house, calendar, shopping and info.
 - Household presence/person row with status badges.
 - Room tiles for living room, kitchen, bedroom, hallway/bath, basement, outside and two child/game rooms.
 - Persistent bottom navigation dock for common operational modes.
 
 Related room drill-down: [Living-room dashboard](living-room-dashboard.md).
+
+## Header and status rail pattern
+
+The top of the dashboard is a persistent context layer. It gives the household immediate answers before anyone scrolls or opens a room:
+
+- **Left control:** a menu button that can also act as a kiosk-mode toggle on hold.
+- **Right weather summary:** localized weather text, current temperature and condition icon.
+- **Status rail:** a horizontal `paper-buttons-row` of compact pills for actionable states.
+- **Always-visible critical states:** lock and garage state are color-coded red/green.
+- **Only-show-when-relevant chips:** doors, appliances and robot vacuum are hidden unless active/open/finished/running.
+- **Fast drill-downs:** chips can navigate directly to focused pop-ups such as weather, robot vacuum or lights.
+
+Sanitized implementation sketch:
+
+```yaml
+type: vertical-stack
+cards:
+  - type: custom:gap-card
+    height: 12px
+  - type: custom:layout-card
+    layout_type: custom:grid-layout
+    layout:
+      grid-template-columns: min-content 1fr max-content
+      grid-template-areas: |
+        "menu . weather"
+    cards:
+      - type: custom:button-card
+        view_layout:
+          grid-area: menu
+        icon: mdi:menu
+        entity: input_boolean.kiosk_mode
+        hold_action:
+          action: toggle
+        tap_action:
+          action: call-service
+          service: browser_mod.open_menu
+      - type: custom:button-card
+        view_layout:
+          grid-area: weather
+        entity: sensor.weather_now
+        show_icon: false
+        name: "[[[ return states['sensor.weather_condition_localized'].state; ]]]"
+        label: |
+          [[[ return `${entity.attributes.temperature.toFixed(1)}°`; ]]]
+        custom_fields:
+          icon: |
+            [[[ return `<ha-icon icon="${entity.attributes.icon}"></ha-icon>`; ]]]
+        tap_action:
+          action: navigate
+          navigation_path: "#weather"
+  - type: custom:paper-buttons-row
+    styles:
+      overflow: scroll
+      gap: 8px
+    buttons:
+      - icon: mdi:door
+        name: Front door
+        entity: lock.front_door
+        state_styles:
+          unlocked:
+            button:
+              color: red
+          locked:
+            button:
+              color: green
+      - icon: mdi:garage
+        name: Garage
+        entity: cover.garage_door
+        state_styles:
+          open:
+            button:
+              color: red
+          closed:
+            button:
+              color: green
+      - icon: mdi:door-open
+        name: Patio
+        entity: binary_sensor.patio_door_contact
+        styles:
+          button:
+            display: "{{ 'flex' if is_state(config.entity, 'on') else 'none' }}"
+      - icon: mdi:washing-machine
+        entity: input_boolean.washing_machine_running
+        state: >
+          {% if is_state(config.entity, 'on') %}Running{% endif %}
+        styles:
+          button:
+            display: "{{ 'flex' if is_state(config.entity, 'on') else 'none' }}"
+      - icon: mdi:lightbulb-group
+        entity: sensor.number_of_lights_on
+        state: "{{ states(config.entity) }} lights on"
+        tap_action:
+          action: navigate
+          navigation_path: "#lights"
+```
 
 ## Navigation pattern
 
@@ -92,6 +190,9 @@ card:
 ## Why this works well
 
 - The dashboard is not just a control panel; it is a household status overview.
+- The top header answers the two fastest questions first: “where is the menu?” and “what is the weather now?”
+- The status rail is quiet by default but becomes prominent when something needs attention.
+- Locks, garage, open doors, appliances, vacuum and light count are represented as small actionable chips instead of full cards.
 - Status is grouped by how people think: home, people, rooms and quick actions.
 - The persistent frame makes navigation predictable because the most important context never disappears.
 - The bottom dock keeps operational shortcuts reachable even from pop-ups and deep interaction states.
