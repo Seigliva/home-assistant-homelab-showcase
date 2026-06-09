@@ -1,10 +1,11 @@
 # Mobile-first main dashboard
-
-![Anonymized Home Assistant mobile dashboard](../assets/dashboards/mobile-main-dashboard-anonymized.jpg)
-
-Info view example:
-
-![Anonymized Home Assistant info view](../assets/dashboards/mobile-main-dashboard-info-view-anonymized.jpg)
+Huset (Main) and Info view example:
+<table>
+  <tr>
+    <td><img src="../assets/dashboards/mobile-main-dashboard-anonymized.jpg" alt="Anonymized Home Assistant mobile dashboard" /></td>
+    <td><img src="../assets/dashboards/mobile-main-dashboard-info-view-anonymized.jpg" alt="Anonymized Home Assistant info view" /></td>
+  </tr>
+</table>
 
 ## Goal
 
