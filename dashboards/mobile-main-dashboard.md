@@ -27,57 +27,12 @@ A mobile-first Home Assistant dashboard used as the shared daily control surface
 
 Related room drill-down: [Living-room dashboard](living-room-dashboard.md).
 
-## Heat pump control pattern
-
-The living-room dashboard includes heat pump controls backed by **Broadlink IR**.
-
-Pattern used:
-
-1. Store the intended heat pump setpoint in an `input_number`, for example `input_number.heat_pump_setpoint`.
-2. Use dashboard buttons for temperature up/down.
-3. Each button calls a Home Assistant script that sends the matching Broadlink IR command.
-4. The same button also updates the helper using `input_number.increment` or `input_number.decrement`.
-5. Initial helper values are calibrated from the physical remote before the remote is put away.
-
-This keeps the dashboard state aligned with the IR-only device even though the heat pump itself does not report its setpoint back to Home Assistant.
-
-## Example YAML sketch
-
-```yaml
-script:
-  heat_pump_temperature_up:
-    alias: Heat pump temperature up
-    sequence:
-      - action: remote.send_command
-        target:
-          entity_id: remote.living_room_broadlink
-        data:
-          device: heat_pump
-          command: temperature_up
-      - action: input_number.increment
-        target:
-          entity_id: input_number.heat_pump_setpoint
-
-  heat_pump_temperature_down:
-    alias: Heat pump temperature down
-    sequence:
-      - action: remote.send_command
-        target:
-          entity_id: remote.living_room_broadlink
-        data:
-          device: heat_pump
-          command: temperature_down
-      - action: input_number.decrement
-        target:
-          entity_id: input_number.heat_pump_setpoint
-```
-
 ## Why this works well
 
 - The dashboard is not just a control panel; it is a household status overview.
 - Status is grouped by how people think: home, people, rooms and quick actions.
 - Temperature is surfaced at the room level, which makes climate issues visible without opening each room.
-- The Broadlink pattern turns a one-way IR device into a practical dashboard-controlled device by pairing commands with a helper.
+- Room-specific controls are moved into drill-down pages so the main dashboard stays clean.
 
 ## Privacy note
 
