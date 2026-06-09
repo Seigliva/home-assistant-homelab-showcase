@@ -12,6 +12,7 @@ This is not a raw backup of my Home Assistant config. It is a cleaned-up showcas
 - Smart blinds driven by temperature, wind and MQTT tilt control
 - Laundry, dishwasher, water-leak and trash-day reminders
 - Air-quality light feedback
+- Mobile-first Home Assistant dashboard patterns
 - Unraid Docker watchdog pattern
 - CLARA/Hermes Agent research and operations briefings
 
@@ -28,6 +29,7 @@ This is not a raw backup of my Home Assistant config. It is a cleaned-up showcas
 ## Repository structure
 
 - `docs/` — hardware, integrations, architecture and design notes
+- `dashboards/` — anonymized Home Assistant dashboard patterns and screenshots
 - `automations/home-assistant/` — reusable Home Assistant automation patterns
 - `automations/clara-hermes/` — CLARA/Hermes Agent side automations
 - `packages/` — cleaned package-style YAML examples

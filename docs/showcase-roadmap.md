@@ -6,6 +6,7 @@
 
 - curated README, brand note and architecture docs
 - robot mower weather-gated example
+- anonymized mobile dashboard screenshot and design pattern
 - smart blinds examples
 - laundry/trash/air-quality notification patterns
 - Unraid Docker watchdog pattern
@@ -13,7 +14,7 @@
 
 ## Later ideas
 
-- screenshots of dashboards with private data blurred
+- more room-specific dashboard walkthroughs and short clips with private data blurred
 - blueprint versions of the best automations
 - blog-style walkthroughs
 - Home Assistant package templates
