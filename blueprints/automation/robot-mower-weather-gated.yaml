@@ -1,0 +1,170 @@
+blueprint:
+  name: Robot mower - every second day if dry
+  description: >-
+    Starts a robot mower on a fixed time every second day, skips wet weather,
+    and sends a completion notification only for runs started by this automation.
+
+    Create one input_boolean helper first; the blueprint uses it to remember
+    whether the current mower run was started automatically or manually.
+  domain: automation
+  source_url: https://github.com/Seigliva/home-assistant-homelab-showcase/blob/main/blueprints/automation/robot-mower-weather-gated.yaml
+  input:
+    mower_entity:
+      name: Robot mower
+      description: Lawn mower entity to start and monitor.
+      selector:
+        entity:
+          domain: lawn_mower
+
+    weather_entity:
+      name: Weather entity
+      description: Weather entity used to block mowing during wet conditions.
+      default: weather.home
+      selector:
+        entity:
+          domain: weather
+
+    active_run_helper:
+      name: Automation active-run helper
+      description: >-
+        input_boolean helper used to track that the mower was started by this
+        blueprint, so completion notifications are not sent for manual runs.
+      selector:
+        entity:
+          domain: input_boolean
+
+    mowing_time:
+      name: Start time
+      description: Time of day when the mower should start if all checks pass.
+      default: "09:00:00"
+      selector:
+        time:
+
+    start_date:
+      name: Start date for every-second-day schedule
+      description: >-
+        The first eligible mowing date. The blueprint runs when the number of
+        days since this date is divisible by 2.
+      default: "2026-05-27"
+      selector:
+        date:
+
+    blocked_weather_states:
+      name: Weather states that block mowing
+      description: If the weather entity is in one of these states, mowing is skipped.
+      default:
+        - rainy
+        - pouring
+        - lightning-rainy
+        - snowy-rainy
+      selector:
+        select:
+          multiple: true
+          custom_value: true
+          options:
+            - rainy
+            - pouring
+            - lightning-rainy
+            - snowy-rainy
+            - snowy
+            - hail
+            - lightning
+
+    notify_service:
+      name: Notify service
+      description: Notification service to call, for example notify.family or notify.mobile_app_phone.
+      default: notify.family
+      selector:
+        text:
+
+    start_notification_title:
+      name: Start notification title
+      default: Robot mower started
+      selector:
+        text:
+
+    start_notification_message:
+      name: Start notification message
+      default: "Robot mower started automatically. Weather: {{ states(weather_entity) }}."
+      selector:
+        text:
+          multiline: true
+
+    finish_notification_title:
+      name: Finish notification title
+      default: Robot mower finished
+      selector:
+        text:
+
+    finish_notification_message:
+      name: Finish notification message
+      default: The robot mower is finished and back in the dock.
+      selector:
+        text:
+          multiline: true
+
+mode: single
+
+variables:
+  mower_entity: !input mower_entity
+  weather_entity: !input weather_entity
+  active_run_helper: !input active_run_helper
+  start_date: !input start_date
+  blocked_weather_states: !input blocked_weather_states
+  notify_service: !input notify_service
+  start_notification_title: !input start_notification_title
+  start_notification_message: !input start_notification_message
+  finish_notification_title: !input finish_notification_title
+  finish_notification_message: !input finish_notification_message
+
+trigger:
+  - platform: time
+    at: !input mowing_time
+    id: start_time
+  - platform: state
+    entity_id: !input mower_entity
+    to: docked
+    id: mower_docked
+
+action:
+  - choose:
+      - alias: Start mower every second day if weather is dry
+        conditions:
+          - condition: trigger
+            id: start_time
+          - condition: template
+            value_template: >-
+              {{ now().date() >= as_datetime(start_date).date()
+                 and ((now().date() - as_datetime(start_date).date()).days % 2 == 0) }}
+          - condition: template
+            value_template: "{{ states(weather_entity) not in blocked_weather_states }}"
+          - condition: state
+            entity_id: !input active_run_helper
+            state: "off"
+        sequence:
+          - action: lawn_mower.start_mowing
+            target:
+              entity_id: !input mower_entity
+          - action: input_boolean.turn_on
+            target:
+              entity_id: !input active_run_helper
+          - action: "{{ notify_service }}"
+            data:
+              title: "{{ start_notification_title }}"
+              message: "{{ start_notification_message }}"
+
+      - alias: Notify when automation-started mower run returns to dock
+        conditions:
+          - condition: trigger
+            id: mower_docked
+          - condition: state
+            entity_id: !input active_run_helper
+            state: "on"
+        sequence:
+          - action: "{{ notify_service }}"
+            data:
+              title: "{{ finish_notification_title }}"
+              message: "{{ finish_notification_message }}"
+          - action: input_boolean.turn_off
+            target:
+              entity_id: !input active_run_helper

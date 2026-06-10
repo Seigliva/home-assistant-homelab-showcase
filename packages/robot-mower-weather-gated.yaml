@@ -1,6 +1,6 @@
 input_boolean:
-  robot_mower_clara_active_run:
-    name: Robot Mower CLARA active run
+  robot_mower_active_run:
+    name: Robot Mower active run
     icon: mdi:robot-mower
 
 automation:

@@ -32,6 +32,7 @@ This is not a raw backup of my Home Assistant config. It is a cleaned-up showcas
 - `dashboards/` — anonymized Home Assistant dashboard patterns and screenshots
 - `automations/home-assistant/` — reusable Home Assistant automation patterns
 - `automations/clara-hermes/` — CLARA/Hermes Agent side automations
+- `blueprints/` — Home Assistant blueprint versions of selected patterns
 - `packages/` — cleaned package-style YAML examples
 - `tools/` — sanitizing/check scripts used before publishing
 
