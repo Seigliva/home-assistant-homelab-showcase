@@ -1,11 +1,28 @@
 blueprint:
   name: Robot mower - every second day if dry
   description: >-
-    Starts a robot mower on a fixed time every second day, skips wet weather,
-    and sends a completion notification only for runs started by this automation.
+    Starts a robot mower on a fixed time every second day, skips currently wet
+    weather, sends completion notifications only for automation-started runs,
+    and optionally adds rain amount checks, wet-weather dry-out cooldown,
+    same-day retry, stale active-run cleanup, and stale-run alerts.
 
-    Create one input_boolean helper first; the blueprint uses it to remember
-    whether the current mower run was started automatically or manually.
+    Tested with a Navimow/Navimov mower via Home Assistant's lawn_mower domain,
+    but should work with any mower entity that supports lawn_mower.start_mowing
+    and reports docked when finished.
+
+    If this helped you, support the project: https://buymeacoffee.com/itih_nor
+
+    Required helper: create one input_boolean to track automation-started runs.
+
+    Optional rain features:
+    - rain amount sensor: use a sensor that already represents rain during the
+      last X hours, for example "rain last 6h".
+    - last wet weather helper: an input_datetime that stores the last time wet
+      weather was seen. This blueprint can update it automatically, or you can
+      update it from a separate automation.
+
+    If no optional rain helpers/sensors are configured, the automation behaves
+    like the original simple version: it only blocks on the current weather state.
   domain: automation
   source_url: https://github.com/Seigliva/home-assistant-homelab-showcase/blob/main/blueprints/automation/robot-mower-weather-gated.yaml
   input:
@@ -45,13 +62,13 @@ blueprint:
       description: >-
         The first eligible mowing date. The blueprint runs when the number of
         days since this date is divisible by 2.
-      default: "2026-05-27"
+      default: "2026-06-11"
       selector:
         date:
 
     blocked_weather_states:
       name: Weather states that block mowing
-      description: If the weather entity is in one of these states, mowing is skipped.
+      description: If the weather entity is currently in one of these states, mowing is skipped.
       default:
         - rainy
         - pouring
@@ -70,9 +87,205 @@ blueprint:
             - hail
             - lightning
 
+    rain_amount_sensor:
+      name: Optional rain amount sensor
+      description: >-
+        Optional entity ID for rain amount during the last X hours, e.g.
+        sensor.rain_last_6h. Leave blank if you do not have a rain sensor.
+      default: ""
+      selector:
+        text:
+
+    max_rain_amount_mm:
+      name: Max rain amount allowed
+      description: >-
+        If a rain amount sensor is configured, mowing is skipped when the sensor
+        value is above this threshold. Unit is expected to be millimeters.
+      default: 0.5
+      selector:
+        number:
+          min: 0
+          max: 50
+          step: 0.1
+          unit_of_measurement: mm
+          mode: box
+
+    last_wet_weather_helper:
+      name: Optional last wet weather helper
+      description: >-
+        Optional input_datetime helper storing when wet weather was last seen.
+        If configured with dry-out hours > 0, mowing is skipped until enough time
+        has passed since this timestamp. Leave blank to disable this check.
+      default: ""
+      selector:
+        text:
+
+    update_last_wet_weather_from_weather:
+      name: Update last wet weather helper from weather entity
+      description: >-
+        If enabled and a last wet weather helper is configured, this blueprint
+        updates that helper whenever the weather entity changes to one of the
+        blocked wet states, and refreshes it every 15 minutes while weather is
+        still wet. Turn off if another automation maintains the helper.
+      default: true
+      selector:
+        boolean:
+
+    dry_out_hours_after_wet_weather:
+      name: Dry-out hours after wet weather
+      description: >-
+        If a last wet weather helper is configured, wait this many hours after
+        the stored wet-weather timestamp before mowing. Set to 0 to disable.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 72
+          step: 1
+          unit_of_measurement: h
+          mode: slider
+
+    last_automatic_run_helper:
+      name: Optional last automatic run helper
+      description: >-
+        Optional input_datetime helper. If configured, the blueprint updates it
+        when an automatic run starts and uses it for stale-run alerts. Leave blank
+        to disable stale-run tracking.
+      default: ""
+      selector:
+        text:
+
+    stale_run_alert_days:
+      name: Alert if no automatic run within X days
+      description: >-
+        Sends a notification at the stale-run check time if the last automatic
+        start is older than this. Set to 0 to disable.
+      default: 7
+      selector:
+        number:
+          min: 0
+          max: 30
+          step: 1
+          unit_of_measurement: days
+          mode: slider
+
+    stale_run_check_time:
+      name: Stale-run check time
+      description: Time of day to check whether the mower has not run recently.
+      default: "18:00:00"
+      selector:
+        time:
+
+    retry_same_day_enabled:
+      name: Retry later the same day
+      description: >-
+        If enabled, the automation checks every 15 minutes after the normal start
+        time plus the configured delay, until the retry-until time. Requires the
+        last automatic run helper to be configured, so it can avoid repeated starts
+        after one successful run that day.
+      default: false
+      selector:
+        boolean:
+
+    retry_delay_hours:
+      name: Retry delay after skipped start
+      description: >-
+        Earliest retry time is normal start time plus this many hours. Example:
+        start 09:00 and delay 3 means retry checks can start at 12:00.
+      default: 3
+      selector:
+        number:
+          min: 0
+          max: 12
+          step: 0.5
+          unit_of_measurement: h
+          mode: slider
+
+    retry_until_time:
+      name: Retry until time
+      description: Latest time of day same-day retry is allowed.
+      default: "16:00:00"
+      selector:
+        time:
+
+    notify_when_start_skipped:
+      name: Notify when scheduled start is skipped by weather
+      description: >-
+        Sends one notification at the scheduled start time if the run is skipped
+        because current weather is blocked, rain amount is too high, or the last
+        wet-weather helper is still inside the dry-out window.
+      default: false
+      selector:
+        boolean:
+
+    skipped_notification_title:
+      name: Skipped start notification title
+      default: Robot mower skipped
+      selector:
+        text:
+
+    skipped_notification_message:
+      name: Skipped start notification message
+      default: >-
+        Robot mower did not start because weather or wet-ground checks blocked it.
+        Weather: {{ states(weather_entity) }}.
+      selector:
+        text:
+          multiline: true
+
+    notify_on_delayed_start:
+      name: Notify when delayed same-day retry starts
+      description: >-
+        If enabled, send a separate notification when the mower starts later the
+        same day after the scheduled start was blocked by weather or wet-ground checks.
+      default: true
+      selector:
+        boolean:
+
+    delayed_start_notification_title:
+      name: Delayed start notification title
+      default: Robot mower retry started
+      selector:
+        text:
+
+    delayed_start_notification_message:
+      name: Delayed start notification message
+      default: >-
+        Robot mower started later today after weather/wet-ground checks cleared.
+        Weather: {{ states(weather_entity) }}.
+      selector:
+        text:
+          multiline: true
+
+    stale_active_run_cleanup_enabled:
+      name: Clean up stale active-run helper
+      description: >-
+        If enabled, clears the active-run helper when it has been on for longer
+        than the configured minutes while the mower is still docked. Useful if a
+        start command was sent but the mower never actually left the dock, or if
+        you manually return/stop/dock the mower and the integration does not emit
+        a fresh docked state change for the normal finished-run cleanup.
+      default: false
+      selector:
+        boolean:
+
+    stale_active_run_cleanup_minutes:
+      name: Stale active-run cleanup after
+      description: >-
+        Number of minutes active_run_helper may stay on while the mower remains
+        docked before it is automatically turned off.
+      default: 30
+      selector:
+        number:
+          min: 5
+          max: 240
+          step: 5
+          unit_of_measurement: min
+          mode: slider
+
     notify_service:
       name: Notify service
-      description: Notification service to call, for example notify.family or notify.mobile_app_phone.
+      description: Notification service to call, for example notify.notify_voksne or notify.mobile_app_phone.
       default: notify.family
       selector:
         text:
@@ -85,7 +298,8 @@ blueprint:
 
     start_notification_message:
       name: Start notification message
-      default: "Robot mower started automatically. Weather: {{ states(weather_entity) }}."
+      default: >-
+        Robot mower started automatically. Weather: {{ states(weather_entity) }}.
       selector:
         text:
           multiline: true
@@ -103,6 +317,21 @@ blueprint:
         text:
           multiline: true
 
+    stale_run_notification_title:
+      name: Stale-run alert title
+      default: Robot mower has not run recently
+      selector:
+        text:
+
+    stale_run_notification_message:
+      name: Stale-run alert message
+      default: >-
+        Robot mower has not started automatically within {{ stale_run_alert_days }} days.
+        Check weather blocks, schedule, mower status or helper configuration.
+      selector:
+        text:
+          multiline: true
+
 mode: single
 
 variables:
@@ -111,11 +340,32 @@ variables:
   active_run_helper: !input active_run_helper
   start_date: !input start_date
   blocked_weather_states: !input blocked_weather_states
+  rain_amount_sensor: !input rain_amount_sensor
+  max_rain_amount_mm: !input max_rain_amount_mm
+  last_wet_weather_helper: !input last_wet_weather_helper
+  update_last_wet_weather_from_weather: !input update_last_wet_weather_from_weather
+  dry_out_hours_after_wet_weather: !input dry_out_hours_after_wet_weather
+  last_automatic_run_helper: !input last_automatic_run_helper
+  stale_run_alert_days: !input stale_run_alert_days
+  mowing_time: !input mowing_time
+  retry_same_day_enabled: !input retry_same_day_enabled
+  retry_delay_hours: !input retry_delay_hours
+  retry_until_time: !input retry_until_time
+  notify_when_start_skipped: !input notify_when_start_skipped
+  skipped_notification_title: !input skipped_notification_title
+  skipped_notification_message: !input skipped_notification_message
+  notify_on_delayed_start: !input notify_on_delayed_start
+  delayed_start_notification_title: !input delayed_start_notification_title
+  delayed_start_notification_message: !input delayed_start_notification_message
+  stale_active_run_cleanup_enabled: !input stale_active_run_cleanup_enabled
+  stale_active_run_cleanup_minutes: !input stale_active_run_cleanup_minutes
   notify_service: !input notify_service
   start_notification_title: !input start_notification_title
   start_notification_message: !input start_notification_message
   finish_notification_title: !input finish_notification_title
   finish_notification_message: !input finish_notification_message
+  stale_run_notification_title: !input stale_run_notification_title
+  stale_run_notification_message: !input stale_run_notification_message
 
 trigger:
   - platform: time
@@ -125,19 +375,112 @@ trigger:
     entity_id: !input mower_entity
     to: docked
     id: mower_docked
+  - platform: time
+    at: !input stale_run_check_time
+    id: stale_run_check
+  - platform: state
+    entity_id: !input weather_entity
+    id: weather_changed
+  - platform: time_pattern
+    minutes: "/15"
+    id: periodic_15min
 
 action:
   - choose:
-      - alias: Start mower every second day if weather is dry
+      - alias: Track wet weather timestamp from weather entity
         conditions:
-          - condition: trigger
-            id: start_time
           - condition: template
+            alias: Wet-weather tracker trigger
+            value_template: "{{ trigger.id in ['weather_changed', 'periodic_15min'] }}"
+          - condition: template
+            alias: Internal wet-weather tracking is enabled and helper is configured
+            value_template: >-
+              {{ update_last_wet_weather_from_weather and (last_wet_weather_helper | trim) != '' }}
+          - condition: template
+            alias: Weather is currently wet/blocked
+            value_template: >-
+              {% if trigger.id == 'weather_changed' %}
+                {{ trigger.to_state is not none and trigger.to_state.state in blocked_weather_states }}
+              {% else %}
+                {{ states(weather_entity) in blocked_weather_states }}
+              {% endif %}
+        sequence:
+          - action: input_datetime.set_datetime
+            target:
+              entity_id: "{{ last_wet_weather_helper }}"
+            data:
+              datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+
+      - alias: Clean up stale active-run helper while mower is docked
+        conditions:
+          - condition: template
+            alias: Cleanup is enabled and this is a periodic check
+            value_template: "{{ stale_active_run_cleanup_enabled and trigger.id == 'periodic_15min' }}"
+          - condition: state
+            entity_id: !input active_run_helper
+            state: "on"
+          - condition: template
+            alias: Mower is docked and active helper has been on too long
+            value_template: >-
+              {{ states(mower_entity) == 'docked'
+                 and ((as_timestamp(now()) - as_timestamp(states[active_run_helper].last_changed)) / 60) >= (stale_active_run_cleanup_minutes | float(30)) }}
+        sequence:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: !input active_run_helper
+
+      - alias: Start mower every second day if dry
+        conditions:
+          - condition: template
+            alias: Scheduled start or eligible same-day retry
+            value_template: >-
+              {% if trigger.id == 'start_time' %}
+                true
+              {% elif trigger.id == 'periodic_15min' %}
+                {% set helper = last_automatic_run_helper | trim %}
+                {% set last = states(helper) if helper != '' else 'unknown' %}
+                {% set already_ran_today = helper != '' and last not in ['unknown', 'unavailable', 'none', ''] and as_datetime(last).date() == now().date() %}
+                {{ retry_same_day_enabled
+                   and helper != ''
+                   and not already_ran_today
+                   and as_timestamp(now()) >= (as_timestamp(today_at(mowing_time)) + ((retry_delay_hours | float(0)) * 3600))
+                   and as_timestamp(now()) <= as_timestamp(today_at(retry_until_time)) }}
+              {% else %}
+                false
+              {% endif %}
+          - condition: template
+            alias: Every second day from configured start date
             value_template: >-
               {{ now().date() >= as_datetime(start_date).date()
                  and ((now().date() - as_datetime(start_date).date()).days % 2 == 0) }}
           - condition: template
-            value_template: "{{ states(weather_entity) not in blocked_weather_states }}"
+            alias: Current weather is not blocked
+            value_template: >-
+              {{ states(weather_entity) not in blocked_weather_states }}
+          - condition: template
+            alias: Optional rain amount sensor is below threshold
+            value_template: >-
+              {% set sensor = rain_amount_sensor | trim %}
+              {% if sensor == '' %}
+                true
+              {% else %}
+                {{ states(sensor) | is_number and (states(sensor) | float(0)) <= (max_rain_amount_mm | float(0)) }}
+              {% endif %}
+          - condition: template
+            alias: Optional wet-weather dry-out has passed
+            value_template: >-
+              {% set helper = last_wet_weather_helper | trim %}
+              {% set hours = dry_out_hours_after_wet_weather | float(0) %}
+              {% if helper == '' or hours <= 0 %}
+                true
+              {% else %}
+                {% set value = states(helper) %}
+                {% if value in ['unknown', 'unavailable', 'none', ''] %}
+                  true
+                {% else %}
+                  {{ ((as_timestamp(now()) - as_timestamp(value)) / 3600) >= hours }}
+                {% endif %}
+              {% endif %}
           - condition: state
             entity_id: !input active_run_helper
             state: "off"
@@ -148,10 +491,71 @@ action:
           - action: input_boolean.turn_on
             target:
               entity_id: !input active_run_helper
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ last_automatic_run_helper | trim != '' }}"
+                sequence:
+                  - action: input_datetime.set_datetime
+                    target:
+                      entity_id: "{{ last_automatic_run_helper }}"
+                    data:
+                      datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.id == 'periodic_15min' and notify_on_delayed_start }}"
+                sequence:
+                  - action: "{{ notify_service }}"
+                    data:
+                      title: "{{ delayed_start_notification_title }}"
+                      message: "{{ delayed_start_notification_message }}"
+            default:
+              - action: "{{ notify_service }}"
+                data:
+                  title: "{{ start_notification_title }}"
+                  message: "{{ start_notification_message }}"
+
+      - alias: Notify when scheduled start is skipped by weather or wet-ground checks
+        conditions:
+          - condition: trigger
+            id: start_time
+          - condition: template
+            alias: Skip notification is enabled
+            value_template: "{{ notify_when_start_skipped }}"
+          - condition: template
+            alias: Every second day from configured start date
+            value_template: >-
+              {{ now().date() >= as_datetime(start_date).date()
+                 and ((now().date() - as_datetime(start_date).date()).days % 2 == 0) }}
+          - condition: template
+            alias: Not actively mowing according to mower state/helper
+            value_template: >-
+              {{ states(active_run_helper) == 'off' or states(mower_entity) == 'docked' }}
+          - condition: template
+            alias: Start was blocked by current weather, rain amount, or dry-out
+            value_template: >-
+              {% set current_weather_blocked = states(weather_entity) in blocked_weather_states %}
+              {% set sensor = rain_amount_sensor | trim %}
+              {% set rain_amount_blocked = sensor != '' and (not (states(sensor) | is_number) or (states(sensor) | float(0)) > (max_rain_amount_mm | float(0))) %}
+              {% set helper = last_wet_weather_helper | trim %}
+              {% set hours = dry_out_hours_after_wet_weather | float(0) %}
+              {% if helper == '' or hours <= 0 %}
+                {% set dry_out_blocked = false %}
+              {% else %}
+                {% set value = states(helper) %}
+                {% if value in ['unknown', 'unavailable', 'none', ''] %}
+                  {% set dry_out_blocked = false %}
+                {% else %}
+                  {% set dry_out_blocked = ((as_timestamp(now()) - as_timestamp(value)) / 3600) < hours %}
+                {% endif %}
+              {% endif %}
+              {{ current_weather_blocked or rain_amount_blocked or dry_out_blocked }}
+        sequence:
           - action: "{{ notify_service }}"
             data:
-              title: "{{ start_notification_title }}"
-              message: "{{ start_notification_message }}"
+              title: "{{ skipped_notification_title }}"
+              message: "{{ skipped_notification_message }}"
 
       - alias: Notify when automation-started mower run returns to dock
         conditions:
@@ -168,3 +572,27 @@ action:
           - action: input_boolean.turn_off
             target:
               entity_id: !input active_run_helper
+
+      - alias: Alert if no automatic mower run has happened recently
+        conditions:
+          - condition: trigger
+            id: stale_run_check
+          - condition: template
+            alias: Stale-run alert is enabled and helper is configured
+            value_template: >-
+              {{ (stale_run_alert_days | int(0)) > 0 and (last_automatic_run_helper | trim) != '' }}
+          - condition: template
+            alias: Last automatic run is older than configured threshold
+            value_template: >-
+              {% set helper = last_automatic_run_helper | trim %}
+              {% set value = states(helper) %}
+              {% if value in ['unknown', 'unavailable', 'none', ''] %}
+                true
+              {% else %}
+                {{ ((as_timestamp(now()) - as_timestamp(value)) / 86400) >= (stale_run_alert_days | float(0)) }}
+              {% endif %}
+        sequence:
+          - action: "{{ notify_service }}"
+            data:
+              title: "{{ stale_run_notification_title }}"
+              message: "{{ stale_run_notification_message }}"

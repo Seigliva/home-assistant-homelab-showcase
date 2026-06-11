@@ -2,47 +2,90 @@
 
 ## Problem
 
-A robot mower should run regularly in season, but not blindly during bad weather.
+A robot mower should run regularly in season, but not blindly during bad weather or while the lawn is still wet.
 
 ## Pattern
 
-- Trigger at a fixed time each morning.
-- Use a date modulo check to run every second day.
-- Block execution when the weather entity reports rain/snow-rain.
-- Track whether the run was automation-started with an `input_boolean`.
-- Send a completion notification only for automation-started runs.
+Core idea:
 
-## Files
+- Trigger at a fixed time.
+- Use a date modulo check to run every second day.
+- Block execution when the weather entity reports wet/bad weather.
+- Track whether the run was automation-started with an `input_boolean`.
+- Send completion notifications only for automation-started runs.
+
+The full blueprint expands this into a reusable Home Assistant UI-driven automation with optional rain amount checks, wet-weather dry-out, same-day retry, stale-run alerts and stale active-run cleanup.
+
+## Recommended version
+
+Use the Home Assistant blueprint if you want the reusable version:
+
+- Blueprint YAML: [`../../blueprints/automation/robot-mower-weather-gated.yaml`](../../blueprints/automation/robot-mower-weather-gated.yaml)
+- Blueprint documentation: [`../../blueprints/automation/robot-mower-weather-gated.md`](../../blueprints/automation/robot-mower-weather-gated.md)
+
+Import URL:
+
+```text
+https://github.com/Seigliva/home-assistant-homelab-showcase/blob/main/blueprints/automation/robot-mower-weather-gated.yaml
+```
+
+## Simple YAML version
+
+The package-style YAML remains as a smaller reference implementation:
 
 - Package-style YAML example: [`../../packages/robot-mower-weather-gated.yaml`](../../packages/robot-mower-weather-gated.yaml)
-- Blueprint version: [`../../blueprints/automation/robot-mower-weather-gated.yaml`](../../blueprints/automation/robot-mower-weather-gated.yaml)
 
-## Blueprint version
+It demonstrates the basic pattern without all optional blueprint features. Keep it if you want to understand or adapt the core automation manually.
 
-The blueprint version turns this into a reusable Home Assistant automation. It keeps the same pattern, but asks for inputs in the UI:
+## Blueprint features
+
+The blueprint asks for inputs in the Home Assistant UI:
 
 - robot mower entity
 - weather entity
-- `input_boolean` helper for automation-started runs
+- required active-run `input_boolean`
 - start time and first eligible date
 - weather states that block mowing
-- notification service and messages
+- optional rain amount sensor and threshold
+- optional last wet-weather `input_datetime`
+- optional dry-out hours after wet weather
+- optional same-day retry window
+- optional notification when the scheduled run is skipped
+- optional notification when a delayed retry actually starts
+- optional stale active-run cleanup
+- optional stale-run alert if no automatic run has happened recently
+- notification service and message text
 
-Create the helper first, for example `input_boolean.robot_mower_active_run`, then import the blueprint and create an automation from it.
+## Helpers
 
-## Customization
+Minimum helper:
 
-Replace:
+```yaml
+input_boolean:
+  robot_mower_active_run:
+    name: Robot Mower active run
+    icon: mdi:robot-mower
+```
 
-- `lawn_mower.robot_mower`
-- `weather.home`
-- `notify.family`
-- start date/time
-- weather states that should block mowing
+Useful optional helpers:
 
-## Improvement ideas
+```yaml
+input_datetime:
+  last_wet_weather_helper:
+    name: Last wet weather helper
+    has_date: true
+    has_time: true
+    icon: mdi:weather-rainy
 
-- add rain amount from the last X hours
-- add soil moisture sensor
-- suppress runs after manual mowing
-- alert if no successful mow has happened in X days
+  robot_mower_last_automatic_run:
+    name: Robot Mower last automatic run
+    has_date: true
+    has_time: true
+    icon: mdi:robot-mower-outline
+```
+
+## Tested with
+
+Tested with a Navimow/Navimov mower via Home Assistant's `lawn_mower` domain.
+
+It should work with other robot mowers that support `lawn_mower.start_mowing` and report `docked` when finished.
