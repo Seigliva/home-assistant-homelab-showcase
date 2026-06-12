@@ -261,10 +261,9 @@ blueprint:
       name: Clean up stale active-run helper
       description: >-
         If enabled, clears the active-run helper when it has been on for longer
-        than the configured minutes while the mower is still docked. Useful if a
-        start command was sent but the mower never actually left the dock, or if
-        you manually return/stop/dock the mower and the integration does not emit
-        a fresh docked state change for the normal finished-run cleanup.
+        than the configured minutes while the mower is still docked and appears
+        not to have left the dock after the start command. Useful if a start
+        command was sent but the mower never actually left the dock.
       default: false
       selector:
         boolean:
@@ -303,6 +302,23 @@ blueprint:
       selector:
         text:
           multiline: true
+
+    finish_docked_confirmation_minutes:
+      name: Finish only after mower stayed docked for
+      description: >-
+        Wait until the mower has remained docked for this many minutes before
+        sending the finished notification and clearing the active-run helper.
+        This avoids false finished notifications when mowers such as Navimow dock
+        to recharge and then continue mowing. Set longer than a normal mid-job
+        charging stop.
+      default: 75
+      selector:
+        number:
+          min: 0
+          max: 240
+          step: 5
+          unit_of_measurement: min
+          mode: slider
 
     finish_notification_title:
       name: Finish notification title
@@ -362,6 +378,7 @@ variables:
   notify_service: !input notify_service
   start_notification_title: !input start_notification_title
   start_notification_message: !input start_notification_message
+  finish_docked_confirmation_minutes: !input finish_docked_confirmation_minutes
   finish_notification_title: !input finish_notification_title
   finish_notification_message: !input finish_notification_message
   stale_run_notification_title: !input stale_run_notification_title
@@ -420,9 +437,10 @@ action:
             entity_id: !input active_run_helper
             state: "on"
           - condition: template
-            alias: Mower is docked and active helper has been on too long
+            alias: Mower is still docked after start command and active helper has been on too long
             value_template: >-
               {{ states(mower_entity) == 'docked'
+                 and as_timestamp(states[active_run_helper].last_changed) >= as_timestamp(states[mower_entity].last_changed)
                  and ((as_timestamp(now()) - as_timestamp(states[active_run_helper].last_changed)) / 60) >= (stale_active_run_cleanup_minutes | float(30)) }}
         sequence:
           - action: input_boolean.turn_off
@@ -557,13 +575,19 @@ action:
               title: "{{ skipped_notification_title }}"
               message: "{{ skipped_notification_message }}"
 
-      - alias: Notify when automation-started mower run returns to dock
+      - alias: Notify when automation-started mower run is confirmed finished
         conditions:
-          - condition: trigger
-            id: mower_docked
+          - condition: template
+            alias: Finish confirmation trigger
+            value_template: "{{ trigger.id in ['mower_docked', 'periodic_15min'] }}"
           - condition: state
             entity_id: !input active_run_helper
             state: "on"
+          - condition: template
+            alias: Mower has stayed docked long enough to count as finished
+            value_template: >-
+              {{ states(mower_entity) == 'docked'
+                 and ((as_timestamp(now()) - as_timestamp(states[mower_entity].last_changed)) / 60) >= (finish_docked_confirmation_minutes | float(0)) }}
         sequence:
           - action: "{{ notify_service }}"
             data:

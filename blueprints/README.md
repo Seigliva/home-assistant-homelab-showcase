@@ -20,9 +20,10 @@ What you get:
 - optional rain amount threshold
 - optional wet-weather dry-out cooldown using an `input_datetime`
 - optional same-day retry after a weather/wet-ground skip
-- notifications when the mower starts, is skipped, starts later after retry, finishes, or has not run recently
+- notifications when the mower starts, is skipped, starts later after retry, finishes after a confirmed docked period, or has not run recently
 - `input_boolean` tracking so finish notifications only fire for automation-started runs
-- optional cleanup for stale active-run helpers if a start/manual dock action leaves the helper on
+- confirmed finish detection for mowers that dock temporarily to recharge before continuing
+- optional cleanup for stale active-run helpers if a start command leaves the mower stuck in dock
 
 Tested with a Navimow/Navimov mower through Home Assistant's `lawn_mower` domain. It should work with other robot mowers that support `lawn_mower.start_mowing` and report `docked` when finished.
 

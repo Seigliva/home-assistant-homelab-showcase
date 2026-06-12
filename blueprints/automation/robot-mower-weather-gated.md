@@ -13,9 +13,10 @@ The blueprint can:
 - optionally block mowing if a rain amount sensor is above a threshold
 - optionally wait for a dry-out period after the last wet-weather timestamp
 - optionally retry later the same day if the scheduled run was skipped by weather or wet-ground checks
-- notify when mowing starts, is skipped, starts later after retry, finishes, or has not run recently
+- notify when mowing starts, is skipped, starts later after retry, finishes after a confirmed docked period, or has not run recently
 - track whether the run was started by this automation so manual runs do not trigger finish notifications
-- clean up a stale active-run helper if manual intervention or integration behavior leaves it stuck on
+- avoid false finish notifications when a mower docks temporarily to recharge before continuing
+- clean up a stale active-run helper if a start command leaves the mower stuck in dock
 
 ## Tested with
 
@@ -134,7 +135,7 @@ The blueprint supports separate messages for:
 - normal automatic start
 - scheduled start skipped by weather/wet-ground checks
 - delayed same-day retry start
-- finished and back in dock
+- finished after the mower has stayed docked for the configured confirmation period
 - stale-run alert if no automatic start has happened recently
 
 The default notification service is:
@@ -145,20 +146,35 @@ notify.family
 
 Change it to your own service, for example `notify.mobile_app_phone` or a Telegram notification service.
 
+## Confirmed finish detection
+
+Some mowers dock temporarily to recharge and then continue the same mowing job. The blueprint therefore does not treat the first `docked` state as finished immediately.
+
+Use **Finish only after mower stayed docked for** to choose how long the mower must remain docked before the blueprint sends the finished notification and turns the active-run helper off.
+
+Default:
+
+```text
+75 minutes
+```
+
+Set this longer than a normal mid-job charging stop for your mower.
+
 ## Stale active-run cleanup
 
-Enable **Clean up stale active-run helper** if your mower integration sometimes leaves the active-run helper on after a manual stop/return-to-dock action or after a start command where the mower never actually leaves the dock.
+Enable **Clean up stale active-run helper** if your mower integration sometimes accepts a start command but the mower never actually leaves the dock.
 
 Logic:
 
 ```text
 If active_run_helper = on
 and mower = docked
+and the helper was turned on while the mower was already docked
 and helper has been on longer than X minutes
 → turn active_run_helper off
 ```
 
-This is a safety net for manual intervention and integration edge cases.
+This is a safety net for failed starts, not a replacement for confirmed finish detection.
 
 ## Simple YAML version
 
