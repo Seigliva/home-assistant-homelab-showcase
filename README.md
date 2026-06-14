@@ -6,6 +6,7 @@ This is not a raw backup of my Home Assistant config. It is a cleaned-up showcas
 
 ## Highlights
 
+- Reusable Home Assistant blueprints, including AI greetings and weather-gated robot mower scheduling
 - Weather-gated robot mower automation
 - AI-assisted notifications and morning routines
 - Actionable Telegram/mobile notifications

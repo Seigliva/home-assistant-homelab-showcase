@@ -1,0 +1,227 @@
+blueprint:
+  name: AI Greeting Generator
+  description: >
+    Generates a short AI greeting with a selected Home Assistant Conversation agent
+    and stores the result in an input_text helper. Designed for local LLMs/Ollama,
+    but works with any conversation agent that supports conversation.process.
+  domain: automation
+  source_url: https://github.com/Seigliva/home-assistant-homelab-showcase/blob/main/blueprints/automation/ai-greeting-generator.yaml
+  input:
+    schedule:
+      name: Schedule
+      icon: mdi:clock-outline
+      collapsed: false
+      input:
+        hours_pattern:
+          name: Hour pattern
+          description: "Examples: /1 = every hour, /2 = every second hour, 8 = daily at 08:00"
+          default: /1
+          selector:
+            text: {}
+        active_after:
+          name: Active after
+          description: Do not generate greetings before this time.
+          default: "07:00:00"
+          selector:
+            time: {}
+        active_before:
+          name: Active before
+          description: Do not generate greetings after this time.
+          default: "23:00:00"
+          selector:
+            time: {}
+    ai:
+      name: AI agent and prompt
+      icon: mdi:robot-happy-outline
+      collapsed: false
+      input:
+        conversation_agent:
+          name: Conversation agent
+          description: Select a local or cloud Conversation agent, for example Ollama.
+          selector:
+            conversation_agent: {}
+        language:
+          name: Greeting language
+          description: >
+            Language for the generated greeting. Free text is allowed, for example:
+            Norwegian, English, Spanish, German, French, Norsk, Bokmål, Nynorsk,
+            no, en, es, de, fr.
+          default: Norwegian
+          selector:
+            text: {}
+        audience:
+          name: Audience
+          default: the family
+          selector:
+            text: {}
+        tone:
+          name: Base tone
+          default: warm, natural, positive, and slightly personal
+          selector:
+            text: {}
+        max_words:
+          name: Maximum words
+          default: 6
+          selector:
+            number:
+              min: 2
+              max: 20
+              step: 1
+              mode: slider
+        allow_emoji:
+          name: Allow emoji
+          default: true
+          selector:
+            boolean: {}
+        extra_instructions:
+          name: Extra instructions
+          description: Optional. Use for style, household rules, display context, taboo words, etc.
+          default: ""
+          selector:
+            text:
+              multiline: true
+    output:
+      name: Output
+      icon: mdi:text-box-edit-outline
+      collapsed: false
+      input:
+        greeting_text_entity:
+          name: Greeting input_text helper
+          selector:
+            entity:
+              domain: input_text
+        fallback_message:
+          name: Fallback message
+          description: Used if the AI does not return any text.
+          default: Have a great day 😊
+          selector:
+            text: {}
+    debug:
+      name: Logging
+      icon: mdi:bug-outline
+      collapsed: true
+      input:
+        debug_log:
+          name: Write AI response to the system log
+          default: false
+          selector:
+            boolean: {}
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - platform: time_pattern
+    hours: !input hours_pattern
+
+condition:
+  - condition: time
+    after: !input active_after
+    before: !input active_before
+
+action:
+  - variables:
+      greeting_entity: !input greeting_text_entity
+      ai_agent: !input conversation_agent
+      language: !input language
+      audience: !input audience
+      tone: !input tone
+      max_words: !input max_words
+      allow_emoji: !input allow_emoji
+      extra_instructions: !input extra_instructions
+      fallback_message: !input fallback_message
+      debug_log: !input debug_log
+      hour: "{{ now().hour }}"
+      weekday: "{{ now().weekday() }}"
+      daypart: >-
+        {% if weekday | int >= 5 %}
+          weekend
+        {% elif hour | int < 12 %}
+          morning
+        {% elif hour | int < 18 %}
+          afternoon
+        {% else %}
+          evening
+        {% endif %}
+      daypart_instruction: >-
+        {% if weekday | int >= 5 %}
+          Make a cozy and cheerful weekend greeting.
+        {% elif hour | int < 12 %}
+          Make a motivating and positive morning greeting.
+        {% elif hour | int < 18 %}
+          Make a friendly afternoon greeting with a small compliment.
+        {% else %}
+          Make a calm and warm evening greeting.
+        {% endif %}
+      prompt: >-
+        You write short greetings for {{ audience }}.
+        Current context: {{ daypart }}.
+        {{ daypart_instruction }}
+        Write the greeting in this language or locale: {{ language }}.
+        Tone: {{ tone }}.
+        Strict requirements:
+        - Maximum {{ max_words }} words.
+        - {% if allow_emoji %}Maximum one emoji.{% else %}No emoji.{% endif %}
+        - Natural everyday language for the requested language/locale.
+        - No quotation marks.
+        - No explanation.
+        - Return only the greeting text.
+        {% if extra_instructions | trim | length > 0 %}
+        Extra instructions: {{ extra_instructions }}
+        {% endif %}
+
+  - action: conversation.process
+    response_variable: ai_svar
+    data:
+      text: "{{ prompt }}"
+      language: >-
+        {% set lang = language | lower | trim %}
+        {% if lang in ['norwegian', 'norsk', 'bokmål', 'bokmal', 'nynorsk', 'no', 'nb', 'nn'] %}
+          no
+        {% elif lang in ['english', 'engelsk', 'en'] %}
+          en
+        {% elif lang in ['spanish', 'español', 'espanol', 'spansk', 'es'] %}
+          es
+        {% elif lang in ['german', 'deutsch', 'tysk', 'de'] %}
+          de
+        {% elif lang in ['french', 'français', 'francais', 'fransk', 'fr'] %}
+          fr
+        {% elif lang in ['danish', 'dansk', 'da'] %}
+          da
+        {% elif lang in ['swedish', 'svensk', 'svenska', 'sv'] %}
+          sv
+        {% else %}
+          {{ lang[:2] if lang | length >= 2 else 'en' }}
+        {% endif %}
+      agent_id: "{{ ai_agent }}"
+
+  - variables:
+      ai_text_raw: "{{ ai_svar.response.speech.plain.speech | default('', true) }}"
+      ai_text_clean: >-
+        {% set raw = ai_text_raw | string | trim %}
+        {% set cleaned = raw
+          | regex_replace('^[\"“”\'\' ]+|[\"“”\'\' ]+$', '')
+          | regex_replace('\\s+', ' ')
+          | trim %}
+        {% if cleaned | length == 0 %}
+          {{ fallback_message }}
+        {% else %}
+          {% set words = cleaned.split() %}
+          {{ words[:max_words | int] | join(' ') }}
+        {% endif %}
+
+  - if:
+      - condition: template
+        value_template: "{{ debug_log }}"
+    then:
+      - action: system_log.write
+        data:
+          level: info
+          message: >-
+            AI greeting blueprint: agent={{ ai_agent }}, language={{ language }}, prompt={{ prompt }}, raw={{ ai_text_raw }}, final={{ ai_text_clean }}
+
+  - action: input_text.set_value
+    target:
+      entity_id: "{{ greeting_entity }}"
+    data:
+      value: "{{ ai_text_clean }}"
