@@ -169,8 +169,8 @@ Logic:
 ```text
 If active_run_helper = on
 and mower = docked
-and the helper was turned on while the mower was already docked
-and helper has been on longer than X minutes
+and mower changed to docked after the active run started
+and the helper has been on longer than X minutes
 → turn active_run_helper off
 ```
 

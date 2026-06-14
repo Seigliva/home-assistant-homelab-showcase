@@ -437,10 +437,10 @@ action:
             entity_id: !input active_run_helper
             state: "on"
           - condition: template
-            alias: Mower is still docked after start command and active helper has been on too long
+            alias: Mower changed to docked after active-run start and helper has been on too long
             value_template: >-
               {{ states(mower_entity) == 'docked'
-                 and as_timestamp(states[active_run_helper].last_changed) >= as_timestamp(states[mower_entity].last_changed)
+                 and as_timestamp(states[mower_entity].last_changed) > as_timestamp(states[active_run_helper].last_changed)
                  and ((as_timestamp(now()) - as_timestamp(states[active_run_helper].last_changed)) / 60) >= (stale_active_run_cleanup_minutes | float(30)) }}
         sequence:
           - action: input_boolean.turn_off
@@ -584,9 +584,10 @@ action:
             entity_id: !input active_run_helper
             state: "on"
           - condition: template
-            alias: Mower has stayed docked long enough to count as finished
+            alias: Mower changed to docked after active-run start and stayed docked long enough
             value_template: >-
               {{ states(mower_entity) == 'docked'
+                 and as_timestamp(states[mower_entity].last_changed) > as_timestamp(states[active_run_helper].last_changed)
                  and ((as_timestamp(now()) - as_timestamp(states[mower_entity].last_changed)) / 60) >= (finish_docked_confirmation_minutes | float(0)) }}
         sequence:
           - action: "{{ notify_service }}"
