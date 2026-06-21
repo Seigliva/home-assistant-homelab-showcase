@@ -24,11 +24,7 @@ The pattern avoids long manually maintained battery lists. When a new battery-po
 
 ## Screenshot
 
-Screenshot coming soon.
-
-<!-- Add anonymized screenshot later at:
-../assets/dashboards/auto-grouped-battery-dashboard.png
--->
+![Auto-grouped Home Assistant battery dashboard card](../assets/dashboards/auto-grouped-battery-dashboard.png)
 
 ## Lovelace card
 
