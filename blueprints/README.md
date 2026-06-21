@@ -39,7 +39,6 @@ What you get:
 - notifications when the mower starts, is skipped, starts later after retry, finishes after a confirmed docked period, or has not run recently
 - `input_boolean` tracking so finish notifications only fire for automation-started runs
 - confirmed finish detection for mowers that dock temporarily to recharge before continuing
-- optional cleanup for stale active-run helpers if a start command leaves the mower stuck in dock
 
 Tested with a Navimow/Navimov mower through Home Assistant's `lawn_mower` domain. It should work with other robot mowers that support `lawn_mower.start_mowing` and report `docked` when finished.
 

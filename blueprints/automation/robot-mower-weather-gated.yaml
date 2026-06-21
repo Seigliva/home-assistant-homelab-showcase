@@ -4,7 +4,7 @@ blueprint:
     Starts a robot mower on a fixed time every second day, skips currently wet
     weather, sends completion notifications only for automation-started runs,
     and optionally adds rain amount checks, wet-weather dry-out cooldown,
-    same-day retry, stale active-run cleanup, and stale-run alerts.
+    same-day retry, confirmed finish detection, and stale-run alerts.
 
     Tested with a Navimow/Navimov mower via Home Assistant's lawn_mower domain,
     but should work with any mower entity that supports lawn_mower.start_mowing
@@ -257,30 +257,6 @@ blueprint:
         text:
           multiline: true
 
-    stale_active_run_cleanup_enabled:
-      name: Clean up stale active-run helper
-      description: >-
-        If enabled, clears the active-run helper when it has been on for longer
-        than the configured minutes while the mower is still docked and appears
-        not to have left the dock after the start command. Useful if a start
-        command was sent but the mower never actually left the dock.
-      default: false
-      selector:
-        boolean:
-
-    stale_active_run_cleanup_minutes:
-      name: Stale active-run cleanup after
-      description: >-
-        Number of minutes active_run_helper may stay on while the mower remains
-        docked before it is automatically turned off.
-      default: 30
-      selector:
-        number:
-          min: 5
-          max: 240
-          step: 5
-          unit_of_measurement: min
-          mode: slider
 
     notify_service:
       name: Notify service
@@ -373,8 +349,6 @@ variables:
   notify_on_delayed_start: !input notify_on_delayed_start
   delayed_start_notification_title: !input delayed_start_notification_title
   delayed_start_notification_message: !input delayed_start_notification_message
-  stale_active_run_cleanup_enabled: !input stale_active_run_cleanup_enabled
-  stale_active_run_cleanup_minutes: !input stale_active_run_cleanup_minutes
   notify_service: !input notify_service
   start_notification_title: !input start_notification_title
   start_notification_message: !input start_notification_message
@@ -428,24 +402,6 @@ action:
             data:
               datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
 
-      - alias: Clean up stale active-run helper while mower is docked
-        conditions:
-          - condition: template
-            alias: Cleanup is enabled and this is a periodic check
-            value_template: "{{ stale_active_run_cleanup_enabled and trigger.id == 'periodic_15min' }}"
-          - condition: state
-            entity_id: !input active_run_helper
-            state: "on"
-          - condition: template
-            alias: Mower changed to docked after active-run start and helper has been on too long
-            value_template: >-
-              {{ states(mower_entity) == 'docked'
-                 and as_timestamp(states[mower_entity].last_changed) > as_timestamp(states[active_run_helper].last_changed)
-                 and ((as_timestamp(now()) - as_timestamp(states[active_run_helper].last_changed)) / 60) >= (stale_active_run_cleanup_minutes | float(30)) }}
-        sequence:
-          - action: input_boolean.turn_off
-            target:
-              entity_id: !input active_run_helper
 
       - alias: Start mower every second day if dry
         conditions:
