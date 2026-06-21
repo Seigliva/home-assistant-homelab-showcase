@@ -7,6 +7,10 @@ These are curated, anonymized dashboard examples from the Home Assistant setup. 
 - [Mobile-first main dashboard](mobile-main-dashboard.md) — shared household dashboard with persistent weather/status header, conditional status rail, four primary views, room temperatures and overlay-safe bottom navigation.
 - [Living-room dashboard](living-room-dashboard.md) — room drill-down for lights, blinds, light-level context and Broadlink IR heat pump control pattern.
 
+## Operational dashboard cards
+
+- [Auto-grouped battery dashboard card](auto-grouped-battery-dashboard.md) — low-maintenance battery overview that auto-discovers battery entities, highlights low batteries and groups healthy devices by Home Assistant Area.
+
 ## Publishing notes
 
 Screenshots are anonymized before publication. Personal photos, names, exact entity IDs and sensitive room/security details are removed or generalized.

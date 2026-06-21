@@ -14,6 +14,7 @@ This is not a raw backup of my Home Assistant config. It is a cleaned-up showcas
 - Laundry, dishwasher, water-leak and trash-day reminders
 - Air-quality light feedback
 - Mobile-first Home Assistant dashboard patterns with anonymized screenshots/video
+- Low-maintenance dashboard cards such as auto-grouped battery status by Area
 - Unraid Docker watchdog pattern
 - CLARA/Hermes Agent research and operations briefings
 
