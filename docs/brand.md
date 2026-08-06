@@ -16,6 +16,6 @@ It also has a small E.T. joke built in: E.T. phones home; ITih automates home.
 
 - automations that solve real household problems
 - Home Assistant patterns others can copy
-- CLARA/Hermes Agent homelab workflows
+- Hermes Agent homelab workflows
 - screenshots and walkthroughs when private data can be hidden
 - lessons learned from running a real self-hosted home

@@ -1,8 +1,8 @@
 ---
-tags: [automation, clara, research, ai, homelab]
+tags: [automation, hermes, research, ai, homelab]
 status: living
 ---
-# CLARA Research Briefing
+# Hermes Research Briefing
 
 ## Formål
 Gi kort ukentlig briefing om AI, AI-agenter, Hermes Agent, praktiske integrasjoner og homelab/Home Assistant-muligheter.
@@ -16,7 +16,7 @@ Gi kort ukentlig briefing om AI, AI-agenter, Hermes Agent, praktiske integrasjon
 - Lenker bare når nyttig.
 
 ## Datakilde
-- Firecrawl API via CLARA miljøvariabler.
+- Firecrawl API via Hermes environment variables.
 
 ## Hermes job
 - `Ukentlig AI + homelab-briefing`

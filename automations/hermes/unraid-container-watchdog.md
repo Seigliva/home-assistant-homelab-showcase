@@ -1,5 +1,5 @@
 ---
-tags: [automation, unraid, docker, monitoring, clara]
+tags: [automation, unraid, docker, monitoring, hermes]
 status: living
 ---
 # Unraid Container Watchdog
@@ -10,7 +10,7 @@ Varsle når containere som var kjørende ved baseline stopper utenfor vedlikehol
 ## Policy
 - Ikke autostart stoppede containere.
 - Noen containere er bevisst stoppet/created.
-- CLARA skal varsle/spørre før restart.
+- Hermes Agent should notify/ask før restart.
 
 ## Schedule
 - Watchdog: hvert 5. minutt.
@@ -27,7 +27,7 @@ Varsle når containere som var kjørende ved baseline stopper utenfor vedlikehol
 
 ## Public pattern
 
-This is a CLARA/Hermes Agent watchdog rather than a native HA automation.
+This is a Hermes Agent watchdog rather than a native HA automation.
 
 Useful design choices:
 

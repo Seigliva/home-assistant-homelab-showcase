@@ -20,11 +20,11 @@ The exact private setup changes over time, but these are the useful public patte
 - Unraid Docker monitoring
 - Proxmox host awareness
 - DNS filtering and local network services
-- CLARA/Hermes Agent scheduled jobs
+- Hermes Agent scheduled jobs
 - Telegram notifications
 
 ## AI/agent patterns
 
 - local or hosted LLMs for short notification text
 - Firecrawl/web research for weekly briefings
-- CLARA as a homelab operations assistant
+- Hermes Agent as a homelab operations assistant

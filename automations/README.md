@@ -13,7 +13,7 @@
 - [Garage door actionable notification](home-assistant/garage-door-actionable-notification.md)
 - [Media: movie mode on play/pause](home-assistant/media-movie-mode.md)
 
-## CLARA / Hermes Agent
+## Hermes Agent
 
-- [Unraid Container Watchdog](clara-hermes/unraid-container-watchdog.md)
-- [Weekly AI + homelab briefing](clara-hermes/weekly-ai-homelab-briefing.md)
+- [Unraid Container Watchdog](hermes/unraid-container-watchdog.md)
+- [Weekly AI + homelab briefing](hermes/weekly-ai-homelab-briefing.md)

@@ -4,9 +4,9 @@ input_boolean:
     icon: mdi:robot-mower
 
 automation:
-  - id: clara_robot_mower_start_every_second_day_if_dry
+  - id: hermes_robot_mower_start_every_second_day_if_dry
     alias: Robot Mower - start every second day if dry
-    description: "CLARA-managed native HA automation. Starts at 09:00 every second day from 2026-05-27 when weather.home is not rain/snow-rain."
+    description: "Hermes-managed native HA automation. Starts at 09:00 every second day from 2026-05-27 when weather.home is not rain/snow-rain."
     mode: single
     triggers:
       - trigger: time
@@ -37,9 +37,9 @@ automation:
           title: Robot Mower startet
           message: "Gressklipperen startet automatisk. Vær: {{ states('weather.home') }}."
 
-  - id: clara_robot_mower_finished_notification
+  - id: hermes_robot_mower_finished_notification
     alias: Robot Mower - finished notification
-    description: "CLARA-managed native HA automation. Notifies when the automation-started mowing run returns to dock."
+    description: "Hermes-managed native HA automation. Notifies when the automation-started mowing run returns to dock."
     mode: single
     triggers:
       - trigger: state

@@ -10,7 +10,7 @@
 - smart blinds examples
 - laundry/trash/air-quality notification patterns
 - Unraid Docker watchdog pattern
-- CLARA weekly AI/homelab briefing pattern
+- Hermes weekly AI/homelab briefing pattern
 
 ## Later ideas
 
