@@ -16,7 +16,7 @@ This is not a raw backup of my Home Assistant config. It is a cleaned-up showcas
 - Mobile-first Home Assistant dashboard patterns with anonymized screenshots/video
 - Low-maintenance dashboard cards such as auto-grouped battery status by Area
 - Unraid Docker watchdog pattern
-- CLARA/Hermes Agent research and operations briefings
+- Hermes Agent research and operations briefings
 
 ## Stack
 
@@ -25,7 +25,7 @@ This is not a raw backup of my Home Assistant config. It is a cleaned-up showcas
 - Proxmox
 - Telegram/mobile notifications
 - Local AI / LLM-assisted automations
-- CLARA / Hermes Agent for homelab operations
+- Hermes Agent for homelab operations
 - MQTT, templates, helpers and package-style YAML
 
 ## Repository structure
@@ -33,7 +33,7 @@ This is not a raw backup of my Home Assistant config. It is a cleaned-up showcas
 - `docs/` — hardware, integrations, architecture and design notes
 - `dashboards/` — anonymized Home Assistant dashboard patterns and screenshots
 - `automations/home-assistant/` — reusable Home Assistant automation patterns
-- `automations/clara-hermes/` — CLARA/Hermes Agent side automations
+- `automations/hermes/` — Hermes Agent side automations
 - `blueprints/` — Home Assistant blueprint versions of selected patterns
 - `packages/` — cleaned package-style YAML examples
 - `tools/` — sanitizing/check scripts used before publishing
