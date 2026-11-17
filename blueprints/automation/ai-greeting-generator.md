@@ -28,7 +28,13 @@ It should work with any Conversation agent that:
 - supports the `conversation.process` action
 - returns speech text under the standard Conversation response object
 
-## Import URL
+## Import into Home Assistant
+
+[![Import blueprint into Home Assistant](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2FSeigliva%2Fhome-assistant-homelab-showcase%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fai-greeting-generator.yaml)
+
+The button opens the import dialog in your own Home Assistant instance. On first use, My Home Assistant may ask for your instance URL. Review and confirm the import, then create an automation and configure its inputs. Importing alone does not start the automation.
+
+### Manual import URL
 
 Use this in Home Assistant's **Import Blueprint** dialog:
 

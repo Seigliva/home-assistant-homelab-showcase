@@ -8,6 +8,8 @@ Blueprints are the easiest way to reuse these patterns because Home Assistant ex
 
 ### AI Greeting Generator
 
+[![Import blueprint into Home Assistant](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2FSeigliva%2Fhome-assistant-homelab-showcase%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fai-greeting-generator.yaml)
+
 - Blueprint: [`automation/ai-greeting-generator.yaml`](automation/ai-greeting-generator.yaml)
 - Details: [`automation/ai-greeting-generator.md`](automation/ai-greeting-generator.md)
 
@@ -23,6 +25,8 @@ What you get:
 - optional debug logging while tuning prompts
 
 ### Robot mower — weather-gated every-second-day mowing
+
+[![Import blueprint into Home Assistant](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2FSeigliva%2Fhome-assistant-homelab-showcase%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Frobot-mower-weather-gated.yaml)
 
 - Blueprint: [`automation/robot-mower-weather-gated.yaml`](automation/robot-mower-weather-gated.yaml)
 - Details: [`automation/robot-mower-weather-gated.md`](automation/robot-mower-weather-gated.md)
@@ -43,6 +47,10 @@ What you get:
 Tested with a Navimow/Navimov mower through Home Assistant's `lawn_mower` domain. It should work with other robot mowers that support `lawn_mower.start_mowing` and report `docked` when finished.
 
 ## Importing from GitHub
+
+Use the import buttons above to open the import dialog in your own Home Assistant instance. My Home Assistant may ask for your instance URL the first time. Confirm the import, create an automation and configure its inputs; importing does not activate an automation by itself.
+
+For manual import:
 
 In Home Assistant:
 
