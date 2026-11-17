@@ -46,3 +46,11 @@ mode: single
 ## Privacy note
 
 The public example avoids exact room layout, real notification target and any camera/security details.
+
+## Runnable sanitized example
+
+- [Complete package YAML](../../examples/home-assistant/water-leak-critical-alert.yaml)
+- [Installation, dependencies, replacements and safe tests](../../examples/home-assistant/README.md)
+
+The package is the complete implementation; earlier snippets above illustrate the
+pattern only. Review the documented adaptation boundaries before enabling it.

@@ -1,0 +1,73 @@
+# Sanitized adaptation. Automations start disabled; see README.md.
+input_boolean:
+  movie_snapshot_active:
+    name: Movie snapshot active
+    initial: false
+automation:
+- id: example_movie_mode
+  alias: Example - Movie mode with restore
+  triggers:
+  - trigger: state
+    entity_id: media_player.living_room_tv
+    to: playing
+    for: 00:00:04
+    id: play
+  - trigger: state
+    entity_id: media_player.living_room_tv
+    from: playing
+    to: paused
+    for: 00:00:06
+    id: pause
+  - trigger: state
+    entity_id: media_player.living_room_tv
+    to:
+    - idle
+    - 'off'
+    - standby
+    id: stop
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: play
+      - condition: time
+        after: '22:00:00'
+      - condition: state
+        entity_id: binary_sensor.living_room_presence
+        state: 'on'
+      sequence:
+      - if: '{{ is_state(''input_boolean.movie_snapshot_active'', ''off'') }}'
+        then:
+        - action: scene.create
+          data:
+            scene_id: example_movie_before
+            snapshot_entities:
+            - light.living_room
+        - action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.movie_snapshot_active
+      - action: light.turn_on
+        target:
+          entity_id: light.living_room
+        data:
+          brightness_pct: 10
+          transition: 2
+    - conditions: '{{ trigger.id == ''pause'' and is_state(''input_boolean.movie_snapshot_active'', ''on'') }}'
+      sequence:
+      - action: light.turn_on
+        target:
+          entity_id: light.living_room
+        data:
+          brightness_pct: 30
+          transition: 2
+    - conditions: '{{ trigger.id == ''stop'' and is_state(''input_boolean.movie_snapshot_active'', ''on'') }}'
+      sequence:
+      - action: scene.turn_on
+        target:
+          entity_id: scene.example_movie_before
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.movie_snapshot_active
+  mode: queued
+  max: 5
+  initial_state: false

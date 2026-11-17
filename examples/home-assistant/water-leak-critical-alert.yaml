@@ -1,0 +1,24 @@
+# Sanitized adaptation. Automations start disabled; see README.md.
+automation:
+- id: example_water_leak
+  alias: Example - Water leak critical alert
+  triggers:
+  - trigger: state
+    entity_id: binary_sensor.kitchen_water_leak
+    to: 'on'
+  conditions: []
+  actions:
+  - action: notify.mobile_app_example_phone
+    data:
+      title: Water leak
+      message: Water detected. Check immediately.
+      data:
+        push:
+          sound:
+            name: default
+            critical: 1
+            volume: 1
+        ttl: 0
+        priority: high
+  mode: single
+  initial_state: false

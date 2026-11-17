@@ -1,0 +1,64 @@
+# Sanitized adaptation. Automations start disabled; see README.md.
+automation:
+- id: example_doorbell_lights
+  triggers:
+  - trigger: state
+    entity_id: event.front_door_doorbell
+  conditions:
+  - condition: template
+    value_template: '{{ trigger.from_state is not none and trigger.to_state is not none and trigger.from_state.state
+      not in [''unknown'',''unavailable''] and trigger.to_state.state not in [''unknown'',''unavailable''] and trigger.to_state.state
+      != trigger.from_state.state and trigger.to_state.attributes.get(''event_type'') == ''ring'' and 0 <= as_timestamp(now())
+      - as_timestamp(trigger.to_state.state, 0) < 30 }}'
+  actions:
+  - parallel:
+    - sequence:
+      - action: notify.mobile_app_example_phone
+        data:
+          title: Doorbell
+          message: Someone is at the front door.
+        continue_on_error: true
+    - sequence:
+      - variables:
+          alert_lights: "{% set ns = namespace(rooms=[]) %}\n{% if is_state('person.adult_one','home') or is_state('person.adult_two','home')\
+            \ %}\n  {% if is_state('binary_sensor.living_room_presence','off') %}\n    {% set ns.rooms = ['office','laundry']\
+            \ %}\n  {% endif %}\n{% elif states('person.adult_one') not in ['home','unknown','unavailable'] and\
+            \ states('person.adult_two') not in ['home','unknown','unavailable'] %}\n  {% for child in ['child_one','child_two','child_three']\
+            \ %}\n    {% if is_state('person.' ~ child,'home') %}{% set ns.rooms = ns.rooms + [child] %}{% endif\
+            \ %}\n  {% endfor %}\n{% endif %}\n{% set out = namespace(ids=[]) %}\n{% for room in ns.rooms %}\n \
+            \ {% set out.ids = out.ids + (expand(area_entities(room)) | selectattr('domain','eq','light') | selectattr('state','eq','on')\
+            \ | map(attribute='entity_id') | list) %}\n{% endfor %}\n{{ out.ids | unique | list }}"
+      - if:
+        - condition: template
+          value_template: '{{ alert_lights | count > 0 }}'
+        then:
+        - action: scene.create
+          data:
+            scene_id: example_doorbell_before
+            snapshot_entities: '{{ alert_lights }}'
+        - repeat:
+            count: 2
+            sequence:
+            - action: light.turn_off
+              target:
+                entity_id: '{{ alert_lights }}'
+              data:
+                transition: 0
+              continue_on_error: true
+            - delay: 00:00:01
+            - action: scene.turn_on
+              target:
+                entity_id: scene.example_doorbell_before
+              data:
+                transition: 0
+            - delay: 00:00:02
+        - action: scene.turn_on
+          target:
+            entity_id: scene.example_doorbell_before
+          data:
+            transition: 0
+  - delay: 00:00:05
+  mode: single
+  max_exceeded: silent
+  alias: Example - Doorbell notification and light alert
+  initial_state: false

@@ -1,0 +1,38 @@
+# Sanitized adaptation. Automations start disabled; see README.md.
+automation:
+- id: example_garage_alert
+  alias: Example - Garage close confirmation
+  triggers:
+  - trigger: state
+    entity_id: cover.garage_door
+    to: open
+    for: 00:15:00
+  conditions:
+  - condition: state
+    entity_id: cover.garage_door
+    state: open
+  actions:
+  - variables:
+      close_action: '{{ ''CLOSE_GARAGE_'' ~ context.id }}'
+  - action: notify.mobile_app_example_phone
+    data:
+      message: Garage is open. Close it only if the doorway is clear.
+      data:
+        actions:
+        - action: '{{ close_action }}'
+          title: Close garage
+  - wait_for_trigger:
+    - trigger: event
+      event_type: mobile_app_notification_action
+      event_data:
+        action: '{{ close_action }}'
+    timeout: 00:10:00
+    continue_on_timeout: false
+  - condition: state
+    entity_id: cover.garage_door
+    state: open
+  - action: cover.close_cover
+    target:
+      entity_id: cover.garage_door
+  mode: single
+  initial_state: false

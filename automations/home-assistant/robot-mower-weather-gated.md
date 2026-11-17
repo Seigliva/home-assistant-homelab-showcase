@@ -14,7 +14,7 @@ Core idea:
 - Track whether the run was automation-started with an `input_boolean`.
 - Send completion notifications only for automation-started runs.
 
-The full blueprint expands this into a reusable Home Assistant UI-driven automation with optional rain amount checks, wet-weather dry-out, same-day retry, stale-run alerts and stale active-run cleanup.
+The full blueprint expands this into a reusable Home Assistant UI-driven automation with optional rain amount checks, wet-weather dry-out, same-day retry and stale-run alerts. It deliberately avoids automatic stale active-run cleanup because mid-job charging can otherwise clear a valid run.
 
 ## Recommended version
 
@@ -52,7 +52,7 @@ The blueprint asks for inputs in the Home Assistant UI:
 - optional same-day retry window
 - optional notification when the scheduled run is skipped
 - optional notification when a delayed retry actually starts
-- optional stale active-run cleanup
+- confirmed docked-period finish detection, including mid-job charging protection
 - optional stale-run alert if no automatic run has happened recently
 - notification service and message text
 
@@ -89,3 +89,10 @@ input_datetime:
 Tested with a Navimow/Navimov mower via Home Assistant's `lawn_mower` domain.
 
 It should work with other robot mowers that support `lawn_mower.start_mowing` and report `docked` when finished.
+
+## Installation and safe testing
+
+See the [example coverage and installation guide](../../examples/home-assistant/README.md)
+and the linked blueprint guide for complete helper dependencies. Do not install
+the legacy package alongside the blueprint. Confirm dry-weather gating without
+starting the mower, then perform a supervised test in a clear area.

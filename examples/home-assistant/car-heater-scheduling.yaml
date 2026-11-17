@@ -1,0 +1,57 @@
+# Sanitized adaptation. Automations start disabled; see README.md.
+input_boolean:
+  car_heater_automatic:
+    name: Car heater automatic
+    initial: false
+input_datetime:
+  next_departure:
+    name: Next departure time
+    has_date: false
+    has_time: true
+    initial: 07:30:00
+automation:
+- id: example_car_heater
+  alias: Example - Temperature based car heater
+  triggers:
+  - trigger: time_pattern
+    minutes: /1
+  - trigger: homeassistant
+    event: start
+  variables:
+    remaining: '{{ (as_timestamp(today_at(states(''input_datetime.next_departure''))) - as_timestamp(now())) / 60
+      }}'
+    lead: '{{ 90 if states(''sensor.outdoor_temperature'') | float(99) < -10 else 60 if states(''sensor.outdoor_temperature'')
+      | float(99) < 0 else 30 }}'
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.car_heater_automatic
+        state: 'on'
+      - condition: state
+        entity_id: binary_sensor.workday
+        state: 'on'
+      - condition: template
+        value_template: '{{ is_number(states(''sensor.outdoor_temperature'')) and states(''sensor.outdoor_temperature'')
+          | float(99) < 5 and 0 < remaining | float(0) <= lead | float(0) }}'
+      sequence:
+      - if: '{{ is_state(''switch.car_heater'', ''off'') }}'
+        then:
+        - action: switch.turn_on
+          target:
+            entity_id: switch.car_heater
+        - delay: 00:00:30
+        - if: '{{ not is_number(states(''sensor.car_heater_power'')) or states(''sensor.car_heater_power'') | float(0)
+            < 50 }}'
+          then:
+          - action: notify.mobile_app_example_phone
+            data:
+              message: Car heater power is low or unavailable. Check the heater.
+    default:
+    - if: '{{ is_state(''switch.car_heater'', ''on'') }}'
+      then:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.car_heater
+  mode: single
+  initial_state: false

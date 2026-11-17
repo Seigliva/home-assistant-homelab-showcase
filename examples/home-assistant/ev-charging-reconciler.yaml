@@ -1,0 +1,90 @@
+# Sanitized adaptation. Automations start disabled; see README.md.
+input_boolean:
+  ev_schedule_enabled:
+    name: EV schedule enabled
+  ev_charge_now:
+    name: EV charge now
+input_datetime:
+  ev_charge_start:
+    name: EV charging start
+    has_date: false
+    has_time: true
+    initial: 02:00:00
+  ev_charge_end:
+    name: EV charging end
+    has_date: false
+    has_time: true
+    initial: 07:00:00
+automation:
+- id: example_ev_reconciler
+  triggers:
+  - trigger: homeassistant
+    event: start
+  - trigger: time_pattern
+    minutes: /1
+  - trigger: time
+    at: input_datetime.ev_charge_start
+  - trigger: time
+    at: input_datetime.ev_charge_end
+  - trigger: time
+    at: 08:15:00
+  - trigger: state
+    entity_id:
+    - sensor.charger_status
+    - switch.charger_enabled
+    - input_boolean.ev_schedule_enabled
+    - input_boolean.ev_charge_now
+    - automation.ev_morning_preheat
+    - device_tracker.ev_location
+    - input_datetime.ev_charge_start
+    - input_datetime.ev_charge_end
+  actions:
+  - if:
+    - condition: template
+      value_template: '{{ states(''sensor.charger_status'') in [''disconnected'', ''completed''] and is_state(''input_boolean.ev_charge_now'',''on'')
+        }}'
+    then:
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.ev_charge_now
+  - condition: template
+    value_template: '{{ is_state(''input_boolean.ev_schedule_enabled'',''on'') or is_state(''input_boolean.ev_charge_now'',''on'')
+      }}'
+  - variables:
+      night: '{% set start = states(''input_datetime.ev_charge_start'') %}{% set end = states(''input_datetime.ev_charge_end'')
+        %}{% set current = now().strftime(''%H:%M:%S'') %}{% if start in [''unknown'',''unavailable''] or end in
+        [''unknown'',''unavailable''] %}false{% else %}{{ (start <= current < end) if start < end else ((current
+        >= start or current < end) if start > end else false) }}{% endif %}'
+      preheat: "{% set a = 'automation.ev_morning_preheat' %} {% set last = as_timestamp(state_attr(a,'last_triggered'),0)\
+        \ %} {{ state_attr(a,'current') | int(0) > 0\n   and 0 <= as_timestamp(now()) - last < 2400\n   and now()\
+        \ < today_at('08:15')\n   and is_state('device_tracker.ev_location','home') }}"
+      allowed: '{{ is_state(''input_boolean.ev_charge_now'',''on'') or (is_state(''input_boolean.ev_schedule_enabled'',''on'')
+        and (night or preheat)) }}'
+      connected: '{{ states(''sensor.charger_status'') in [''awaiting_start'',''ready_to_charge'',''charging'',''completed'']
+        }}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ allowed and connected }}'
+      sequence:
+      - if:
+        - condition: state
+          entity_id: switch.charger_enabled
+          state: 'off'
+        then:
+        - action: switch.turn_on
+          target:
+            entity_id: switch.charger_enabled
+    default:
+    - if:
+      - condition: state
+        entity_id: switch.charger_enabled
+        state: 'on'
+      then:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.charger_enabled
+  mode: queued
+  max: 10
+  alias: Example - EV charging reconciler
+  initial_state: false

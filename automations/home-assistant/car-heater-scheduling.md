@@ -23,3 +23,11 @@ binary_sensor.workday
 ## Nordic note
 
 This is one of the most practical automations in a Norwegian winter setup.
+
+## Runnable sanitized example
+
+- [Complete package YAML](../../examples/home-assistant/car-heater-scheduling.yaml)
+- [Installation, dependencies, replacements and safe tests](../../examples/home-assistant/README.md)
+
+The package is the complete implementation; earlier snippets above illustrate the
+pattern only. Review the documented adaptation boundaries before enabling it.

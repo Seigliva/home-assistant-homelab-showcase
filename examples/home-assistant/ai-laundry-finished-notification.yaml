@@ -1,0 +1,81 @@
+# Sanitized adaptation. Automations start disabled; see README.md.
+input_boolean:
+  laundry_running:
+    name: Laundry running
+  laundry_finished:
+    name: Laundry finished
+  laundry_ai_enabled:
+    name: Laundry AI enabled
+    initial: false
+input_datetime:
+  laundry_last_finished:
+    name: Laundry last finished
+    has_date: true
+    has_time: true
+automation:
+- id: example_laundry
+  alias: Example - Laundry cycle
+  mode: single
+  triggers:
+  - trigger: numeric_state
+    entity_id: sensor.washer_power
+    above: 10
+    for: 00:02:00
+    id: running
+  - trigger: numeric_state
+    entity_id: sensor.washer_power
+    below: 3
+    for: 00:05:00
+    id: finished
+  actions:
+  - choose:
+    - conditions: '{{ trigger.id == ''running'' }}'
+      sequence:
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.laundry_running
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.laundry_finished
+    - conditions:
+      - condition: trigger
+        id: finished
+      - condition: state
+        entity_id: input_boolean.laundry_running
+        state: 'on'
+      - condition: template
+        value_template: '{{ trigger.from_state is not none and trigger.from_state.state not in [''unknown'', ''unavailable'']
+          }}'
+      sequence:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.laundry_running
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.laundry_finished
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.laundry_last_finished
+        data:
+          timestamp: '{{ now().timestamp() }}'
+      - variables:
+          ai_result: {}
+      - if: '{{ is_state(''input_boolean.laundry_ai_enabled'', ''on'') }}'
+        then:
+        - action: conversation.process
+          continue_on_error: true
+          data:
+            agent_id: conversation.local_assistant
+            language: en
+            text: Write one short English sentence saying the washing machine has finished. No extra facts.
+          response_variable: ai_result
+      - variables:
+          message: '{% set r = ai_result | default({}) %} {% set response = r.get(''response'', {}) if r is mapping
+            else {} %} {% set speech = response.get(''speech'', {}) %} {% set plain = speech.get(''plain'', {})
+            if speech is mapping else {} %} {% set text = plain.get(''speech'', '''') if plain is mapping else ''''
+            %} {{ (text | trim)[:180] if text is string and text | trim and response.get(''response_type'') != ''error''
+            else ''The washing machine has finished.'' }}'
+      - action: notify.mobile_app_example_phone
+        data:
+          message: '{{ message }}'
+  initial_state: false

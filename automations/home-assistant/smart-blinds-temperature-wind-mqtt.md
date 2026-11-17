@@ -22,3 +22,11 @@ sensor.wind_speed
 ## Notes
 
 This is a good candidate for a Home Assistant package because it usually needs helpers, thresholds and multiple automations.
+
+## Runnable sanitized example
+
+- [Complete package YAML](../../examples/home-assistant/smart-blinds-temperature-wind-mqtt.yaml)
+- [Installation, dependencies, replacements and safe tests](../../examples/home-assistant/README.md)
+
+The package is the complete implementation; earlier snippets above illustrate the
+pattern only. Review the documented adaptation boundaries before enabling it.

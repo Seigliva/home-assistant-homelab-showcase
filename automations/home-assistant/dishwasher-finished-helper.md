@@ -42,3 +42,11 @@ The helper becomes the stable public interface for the rest of the smart home:
 ## Extension idea
 
 Add a second automation that resets the helper when the door opens or when someone explicitly marks it as emptied.
+
+## Runnable sanitized example
+
+- [Complete package YAML](../../examples/home-assistant/dishwasher-finished-helper.yaml)
+- [Installation, dependencies, replacements and safe tests](../../examples/home-assistant/README.md)
+
+The package is the complete implementation; earlier snippets above illustrate the
+pattern only. Review the documented adaptation boundaries before enabling it.

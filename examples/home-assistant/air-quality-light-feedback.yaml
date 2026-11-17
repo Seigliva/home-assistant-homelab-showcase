@@ -1,0 +1,44 @@
+# Sanitized adaptation. Automations start disabled; see README.md.
+script:
+  air_quality_light_pulse:
+    alias: Example - Air quality light pulse
+    mode: single
+    sequence:
+    - action: scene.create
+      data:
+        scene_id: example_air_quality_before
+        snapshot_entities:
+        - light.air_quality_indicator
+    - action: light.turn_on
+      continue_on_error: true
+      target:
+        entity_id: light.air_quality_indicator
+      data:
+        rgb_color:
+        - 240
+        - 5
+        - 5
+        brightness_pct: 100
+        transition: 1
+    - delay: 00:00:03
+    - action: scene.turn_on
+      target:
+        entity_id: scene.example_air_quality_before
+      data:
+        transition: 1
+automation:
+- id: example_air_quality
+  alias: Example - Air quality feedback
+  triggers:
+  - trigger: numeric_state
+    entity_id: sensor.living_room_co2
+    above: 1200
+  actions:
+  - action: script.air_quality_light_pulse
+  - delay: 00:20:00
+  - condition: numeric_state
+    entity_id: sensor.living_room_co2
+    above: 1400
+  - action: script.air_quality_light_pulse
+  mode: single
+  initial_state: false

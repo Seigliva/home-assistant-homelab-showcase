@@ -6,6 +6,14 @@ This is not a raw backup of my Home Assistant config. It is a cleaned-up showcas
 
 ## Highlights
 
+- [Copy-paste packages, dependencies and safe tests for every automation topic](examples/home-assistant/README.md)
+- [Current Hermes schedules and verified behavior](automations/hermes/README.md)
+- Bedroom manual precedence, alarm-aware toilet night lighting and snapshot-based alerts
+
+The examples were refreshed from read-only live configuration on **2026-11-18**.
+New packages load disabled for safe commissioning. The doorbell alert is explicitly
+**not end-to-end verified**: its source has not delivered a recent physical press.
+
 - Reusable Home Assistant blueprints, including AI greetings and weather-gated robot mower scheduling
 - Weather-gated robot mower automation
 - AI-assisted notifications and morning routines
@@ -36,6 +44,7 @@ This is not a raw backup of my Home Assistant config. It is a cleaned-up showcas
 - `automations/hermes/` — Hermes Agent side automations
 - `blueprints/` — Home Assistant blueprint versions of selected patterns
 - `packages/` — cleaned package-style YAML examples
+- `examples/` — complete sanitized packages with installation, replacement and testing guides
 - `tools/` — sanitizing/check scripts used before publishing
 
 ## Privacy model

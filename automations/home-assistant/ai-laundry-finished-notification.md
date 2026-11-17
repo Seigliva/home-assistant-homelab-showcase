@@ -22,8 +22,18 @@ input_boolean:
 input_datetime:
   washing_machine_last_finished:
     name: Washing machine last finished
+    has_date: true
+    has_time: true
 ```
 
 ## Privacy note
 
 Keep person-specific notification targets and mobile device IDs out of public examples.
+
+## Runnable sanitized example
+
+- [Complete package YAML](../../examples/home-assistant/ai-laundry-finished-notification.yaml)
+- [Installation, dependencies, replacements and safe tests](../../examples/home-assistant/README.md)
+
+The package is the complete implementation; earlier snippets above illustrate the
+pattern only. Review the documented adaptation boundaries before enabling it.

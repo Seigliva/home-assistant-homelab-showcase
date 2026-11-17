@@ -1,0 +1,52 @@
+# Sanitized adaptation. Automations start disabled; see README.md.
+input_number:
+  blinds_tilt:
+    name: Blinds tilt
+    min: 0
+    max: 100
+    step: 5
+    unit_of_measurement: '%'
+automation:
+- id: example_blinds_safety
+  alias: Example - Blinds wind priority
+  triggers:
+  - trigger: time_pattern
+    minutes: /1
+  - trigger: state
+    entity_id:
+    - sensor.wind_speed
+    - sensor.outdoor_temperature
+  actions:
+  - choose:
+    - conditions: '{{ not is_number(states(''sensor.wind_speed'')) or states(''sensor.wind_speed'') | float(999)
+        >= 7 }}'
+      sequence:
+      - action: cover.open_cover
+        target:
+          entity_id: cover.exterior_blinds
+    - conditions: '{{ is_number(states(''sensor.outdoor_temperature'')) and states(''sensor.outdoor_temperature'')
+        | float(0) > 25 and states(''sensor.wind_speed'') | float(999) < 5 }}'
+      sequence:
+      - action: cover.close_cover
+        target:
+          entity_id: cover.exterior_blinds
+  mode: restart
+  initial_state: false
+- id: example_blinds_mqtt_tilt
+  alias: Example - Blinds MQTT tilt
+  triggers:
+  - trigger: state
+    entity_id: input_number.blinds_tilt
+  conditions:
+  - condition: template
+    value_template: '{{ is_number(states(''sensor.wind_speed'')) and states(''sensor.wind_speed'') | float(999)
+      < 5 }}'
+  actions:
+  - action: mqtt.publish
+    data:
+      topic: zigbee2mqtt/example_blinds/set
+      payload: '{{ {"tilt": states("input_number.blinds_tilt") | int(0)} | to_json }}'
+      qos: 0
+      retain: false
+  mode: restart
+  initial_state: false

@@ -1,0 +1,43 @@
+# Sanitized adaptation. Automations start disabled; see README.md.
+input_boolean:
+  waste_ai_enabled:
+    name: Waste AI enabled
+    initial: false
+automation:
+- id: example_waste_reminder
+  alias: Example - Waste collection tomorrow
+  triggers:
+  - trigger: time
+    at: '18:30:00'
+  variables:
+    bins: "{% set ns = namespace(items=[]) %} {% for entity, label in [('sensor.paper_collection', 'paper'), ('sensor.food_collection',\
+      \ 'food waste'), ('sensor.general_collection', 'general waste')] %}\n  {% if state_attr(entity, 'days_to_pickup')\
+      \ | int(-1) == 1 %}\n    {% set ns.items = ns.items + [label] %}\n  {% endif %}\n{% endfor %} {{ ns.items\
+      \ | join(', ') }}"
+  conditions:
+  - condition: template
+    value_template: '{{ bins | trim | length > 0 }}'
+  actions:
+  - variables:
+      fallback: 'Collection tomorrow: {{ bins }}. Put the bins out.'
+      ai_result: {}
+  - if: '{{ is_state(''input_boolean.waste_ai_enabled'', ''on'') }}'
+    then:
+    - action: conversation.process
+      continue_on_error: true
+      data:
+        agent_id: conversation.local_assistant
+        language: en
+        text: 'Rephrase as one short English reminder, without changing the bin types or date: {{ fallback }}'
+      response_variable: ai_result
+  - variables:
+      message: '{% set r = ai_result | default({}) %} {% set response = r.get(''response'', {}) if r is mapping
+        else {} %} {% set speech = response.get(''speech'', {}) %} {% set plain = speech.get(''plain'', {}) if speech
+        is mapping else {} %} {% set text = plain.get(''speech'', '''') if plain is mapping else '''' %} {{ (text
+        | trim)[:240] if text is string and text | trim and response.get(''response_type'') != ''error'' else fallback
+        }}'
+  - action: notify.mobile_app_example_phone
+    data:
+      message: '{{ message }}'
+  mode: single
+  initial_state: false
